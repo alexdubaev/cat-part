@@ -39,9 +39,9 @@ if (($localDb['host'] ?? null) !== '127.0.0.1'
 }
 $config = array_replace_recursive($config, $localConfig);
 
-// An empty numeric list does not replace the base notify list during a
-// recursive merge. Force local previews to have no mail recipients.
-$config['mail']['notify'] = [];
+// Keep the real recipient visible for assertions, but force private local capture.
+$config['mail']['delivery'] = 'capture';
+$config['mail']['capture_dir'] = dirname(BASE_PATH) . '/private/mail-captures';
 
 $app = \App\Core\App::boot($config);
 date_default_timezone_set((string) \App\Core\App::config('app.timezone', 'UTC'));

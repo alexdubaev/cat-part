@@ -50,7 +50,7 @@ final class HomeController extends Controller
             // slug, title, excerpt, image_url, published_at (см. Post::latest()).
             // Пустой массив, пока статьи не залиты, — вьюха обязана это пережить
             // и просто не показать блок.
-            'articles' => Post::latest(4),
+            'articles' => Post::latest(3),
         ]);
     }
 }

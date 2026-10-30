@@ -112,7 +112,7 @@ final class LeadController extends Controller
             . 'Страница: ' . $this->pageUrl() . "\n"
             . 'Время: ' . date('d.m.Y H:i') . "\n";
 
-        $sent = @mail(implode(', ', $to), $subject, $body, $this->headers());
+        $sent = \App\Core\Mailer::send($subject, $body, $this->headers());
 
         if (!$sent) {
             /*
@@ -244,7 +244,9 @@ final class LeadController extends Controller
      */
     private function succeed(bool $ajax): never
     {
-        $message = 'Заявка отправлена. Мы получили ваши контакты и свяжемся с вами.';
+        $message = App::config('mail.delivery') === 'capture'
+            ? 'Локальный тест: заявка сохранена для проверки, письмо не отправлялось.'
+            : 'Заявка отправлена. Мы получили ваши контакты и свяжемся с вами.';
 
         if ($ajax) {
             $this->json(['ok' => true, 'message' => $message]);

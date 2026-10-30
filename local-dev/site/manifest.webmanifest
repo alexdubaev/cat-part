@@ -1,0 +1,47 @@
+{
+  "name": "CatPart — запчасти для техники Caterpillar",
+  "short_name": "CatPart",
+  "description": "Подбор запчастей для техники Caterpillar по артикулу, кросс-номеру и модели машины.",
+  "lang": "ru",
+  "dir": "ltr",
+  "start_url": "/?utm_source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0d0d",
+  "theme_color": "#0d0d0d",
+  "categories": ["shopping", "business"],
+  "icons": [
+    {
+      "src": "/assets/img/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Поиск по артикулу",
+      "short_name": "Поиск",
+      "description": "Найти деталь по номеру или кросс-номеру",
+      "url": "/poisk"
+    },
+    {
+      "name": "Каталог",
+      "short_name": "Каталог",
+      "description": "Разделы каталога запчастей",
+      "url": "/catalog"
+    },
+    {
+      "name": "Контакты",
+      "short_name": "Контакты",
+      "url": "/kontakty"
+    }
+  ]
+}

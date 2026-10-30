@@ -12,6 +12,7 @@ cat-part.ru/upload/
 local-dev/bin/
 local-dev/data/
 local-dev/logs/
+local-dev/private/
 local-dev/site/upload/
 .autopilot/serve.*
 

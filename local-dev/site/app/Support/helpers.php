@@ -158,18 +158,19 @@ function cfg(string $key, mixed $default = null): mixed
 /** Safe public brand facts; intentionally separate from secret-bearing config files. */
 function brand_setting(string $key, mixed $default = null): mixed
 {
-    static $brand;
-    if (!is_array($brand)) {
-        $brand = require __DIR__ . '/../Config/branding.php';
-    }
-    return $brand[$key] ?? $default;
+    return App::config('branding.' . $key, $default);
 }
 
 /** Количество позиций в корзине (для бейджа в шапке). */
 function cart_count(): int
 {
     $cart = Session::get('cart', []);
-    return is_array($cart) ? array_sum(array_map(static fn ($i) => (int) ($i['qty'] ?? 0), $cart)) : 0;
+    if (!is_array($cart)) return 0;
+    $count = 0;
+    foreach ($cart as $id => $qty) {
+        if (ctype_digit((string) $id) && is_int($qty) && $qty > 0) $count += min(99, $qty);
+    }
+    return $count;
 }
 
 /**

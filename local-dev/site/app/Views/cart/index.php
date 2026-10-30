@@ -27,6 +27,8 @@ $lines = $lines ?? [];
                 <h2>Отправить запрос</h2><p>Цена и наличие подтверждаются менеджером. Онлайн-оплаты нет.</p>
                 <form method="post" action="<?= e(url('/korzina/checkout')) ?>">
                     <?= csrf_field() ?>
+                    <input type="hidden" name="checkout_token" value="<?= e($checkoutToken) ?>">
+                    <label style="position:absolute;left:-10000px" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
                     <label class="cp-fld"><span class="cp-fld__lbl">Имя</span><input class="cp-fld__inp" name="name" required maxlength="120" autocomplete="name"></label>
                     <label class="cp-fld"><span class="cp-fld__lbl">Телефон</span><input class="cp-fld__inp" type="tel" name="phone" required minlength="10" autocomplete="tel"></label>
                     <label class="cp-fld"><span class="cp-fld__lbl">Email (необязательно)</span><input class="cp-fld__inp" type="email" name="email" maxlength="160" autocomplete="email"></label>

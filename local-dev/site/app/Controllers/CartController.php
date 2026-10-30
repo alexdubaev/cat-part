@@ -15,6 +15,9 @@ final class CartController extends Controller
 
     public function index(): void
     {
+        if (!is_string(Session::get('checkout_token'))) {
+            Session::set('checkout_token', bin2hex(random_bytes(32)));
+        }
         $this->view('cart/index', [
             'page' => [
                 'title' => 'Корзина | ' . App::config('site.name'),
@@ -25,6 +28,7 @@ final class CartController extends Controller
             'lines' => $this->lines(),
             'ok' => Session::getFlash('cart_ok'),
             'error' => Session::getFlash('cart_error'),
+            'checkoutToken' => Session::get('checkout_token'),
         ]);
     }
 
@@ -66,6 +70,15 @@ final class CartController extends Controller
     public function checkout(): never
     {
         $this->verifyCsrf();
+        $token = Session::get('checkout_token');
+        if (trim((string) ($_POST['website'] ?? '')) !== '') {
+            Session::flash('cart_error', 'Не удалось отправить запрос. Проверьте форму и повторите.');
+            $this->redirect('/korzina');
+        }
+        if (!is_string($token) || !hash_equals($token, (string) ($_POST['checkout_token'] ?? ''))) {
+            Session::flash('cart_error', 'Форма уже отправлена или устарела. Проверьте корзину и отправьте новый запрос.');
+            $this->redirect('/korzina');
+        }
         $name = $this->clean((string) ($_POST['name'] ?? ''), 120);
         $phone = $this->clean((string) ($_POST['phone'] ?? ''), 32);
         $email = $this->clean((string) ($_POST['email'] ?? ''), 160);
@@ -90,33 +103,26 @@ final class CartController extends Controller
             $body .= '- ' . $line['sku'] . ' — ' . $line['name'] . ' × ' . $line['qty'] . "\n";
         }
         $body .= "\nЦены и наличие подтверждаются менеджером.\n";
-        $hash = hash('sha256', $body);
-        if (Session::get('last_order_hash') === $hash) {
-            Session::flash('cart_ok', 'Этот запрос уже принят. Менеджер подтвердит состав и стоимость.');
+        if (!\App\Core\RequestThrottle::checkoutAllowed()) {
+            Session::flash('cart_error', 'Слишком много запросов. Попробуйте через 10 минут или свяжитесь с нами по телефону.');
             $this->redirect('/korzina');
         }
         $subject = '=?UTF-8?B?' . base64_encode('Запрос из корзины CatPart') . '?=';
         $headers = "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n";
         $from = (string) App::config('mail.from_email', 'noreply@cat-part.ru');
         if (filter_var($from, FILTER_VALIDATE_EMAIL)) $headers .= "From: <{$from}>\r\n";
-        $to = (string) brand_setting('email', 'info@cmteh.ru');
-        $sent = false;
-        // bootstrap forcibly empties mail.notify for local previews; use that guard
-        // instead of trusting a mutable environment label, so test orders never send.
-        if ((array) App::config('mail.notify', []) === []) {
-            $dir = dirname(__DIR__, 2) . '/storage/order-captures';
-            if (!is_dir($dir)) mkdir($dir, 0775, true);
-            $sent = file_put_contents($dir . '/' . date('Ymd-His') . '-' . bin2hex(random_bytes(3)) . '.txt', "To: {$to}\nSubject: {$subject}\n\n{$body}") !== false;
-        } else {
-            $sent = @mail($to, $subject, $body, $headers);
-        }
+        $to = (string) App::config('site.email');
+        $sent = \App\Core\Mailer::send($subject, $body, $headers);
         if (!$sent) {
             Session::flash('cart_error', 'Не удалось отправить запрос. Корзина сохранена — повторите позже или напишите на ' . $to . '.');
             $this->redirect('/korzina');
         }
-        Session::set('last_order_hash', $hash);
+        Session::forget('checkout_token');
+        Session::forget('last_order_hash');
         Session::set('cart', []);
-        Session::flash('cart_ok', 'Запрос принят. Менеджер подтвердит наличие и стоимость.');
+        Session::flash('cart_ok', App::config('mail.delivery') === 'capture'
+            ? 'Запрос принят. Локальный тест: письмо не отправлялось, данные сохранены для проверки.'
+            : 'Запрос принят. Менеджер подтвердит наличие и стоимость.');
         $this->redirect('/korzina');
     }
 

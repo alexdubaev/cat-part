@@ -1,0 +1,27 @@
+# cat-part.ru — фронт-контроллер + https + ЧПУ
+
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # www → без www
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+    # http → https (учитываем прокси)
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # Реальные файлы и папки (ассеты) отдаём как есть
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Всё остальное — на единый фронт-контроллер
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+ErrorDocument 404 /index.php
