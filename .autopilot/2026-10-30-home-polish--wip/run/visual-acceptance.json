@@ -1,0 +1,46 @@
+[
+  {
+    "width": 1440,
+    "overflow": false,
+    "articles": 3,
+    "broken": 0,
+    "articleRows": [
+      2440,
+      2440,
+      2440
+    ]
+  },
+  {
+    "width": 1280,
+    "overflow": false,
+    "articles": 3,
+    "broken": 0,
+    "articleRows": [
+      2440,
+      2440,
+      2440
+    ]
+  },
+  {
+    "width": 390,
+    "overflow": false,
+    "articles": 3,
+    "broken": 0,
+    "articleRows": [
+      4461,
+      4987,
+      5492
+    ]
+  },
+  {
+    "width": 375,
+    "overflow": false,
+    "articles": 3,
+    "broken": 0,
+    "articleRows": [
+      4567,
+      5085,
+      5581
+    ]
+  }
+]

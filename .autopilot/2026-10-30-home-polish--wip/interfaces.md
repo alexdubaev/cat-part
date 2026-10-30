@@ -6,3 +6,6 @@ Assets: local-dev/site/assets/img/catalog-icons/<semantic-name>.webp (18), benef
 Брендбук deliverables/brandbook/index.html и brandbook.pdf; при использовании локальных относительных assets все положить рядом.
 Одна команда проверки python tools/check-site.py (создаётся исполнителем; PHP lint, HTTP, assets) и визуальная проверка Playwright локально. Сначала измерить исходную высоту каталога и сделать screenshots before. Не читать `.sql` целиком, не печатать пользовательские данные.
 Git коммиты только явные пути; базовые config игнорируются. Изображения товаров не коммитить тысячами.
+
+## Реализованные интерфейсы
+App::config принимает единый безопасный overlay branding.php; локальные transport/env-граничные настройки сохраняются. Core/Mailer использует real/capture/failure transport с capture за пределами docroot; Core/RequestThrottle — общий IP-лимит. Cart session: product_id=>integer qty, одноразовый checkout_token. Product WebP cache строится скриптом prepare-product-webp.py, исходники неизменны. Скрипты графики читают активный run dir из state.js. Брендбук автономный HTML с соседними assets и PDF.
