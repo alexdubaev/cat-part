@@ -2,7 +2,7 @@ window.STATE =
 {
   "version": 2,
   "slug": "home-polish",
-  "dir": "2026-10-30-home-polish--wip",
+  "dir": "2026-10-30-home-polish",
   "title": "CatPart — компактный каталог и графика",
   "mode": "semi",
   "depth": "normal",
@@ -13,8 +13,8 @@ window.STATE =
   "skillDir": "C:/Users/elena/.codex/skills/autopilot",
   "baseCommit": "4225f34",
   "startedAt": "2026-10-30T12:52:48+03:00",
-  "updatedAt": "2026-10-30T14:11:44+03:00",
-  "finishedAt": null,
+  "updatedAt": "2026-10-30T14:11:47+03:00",
+  "finishedAt": "2026-10-30T14:11:47+03:00",
   "stages": [
     {
       "id": "preflight",
@@ -60,8 +60,9 @@ window.STATE =
     },
     {
       "id": "final",
-      "status": "active",
-      "startedAt": "2026-10-30T14:01:44+03:00"
+      "status": "done",
+      "startedAt": "2026-10-30T14:01:44+03:00",
+      "finishedAt": "2026-10-30T14:11:47+03:00"
     }
   ],
   "requirements": {
@@ -206,9 +207,10 @@ window.STATE =
     "2026-10-30T14:09:02+03:00",
     "2026-10-30T14:09:30+03:00",
     "2026-10-30T14:09:31+03:00",
-    "2026-10-30T14:11:44+03:00"
+    "2026-10-30T14:11:44+03:00",
+    "2026-10-30T14:11:47+03:00"
   ],
-  "rev": 38,
+  "rev": 39,
   "waiting": null,
   "waits": [
     {
@@ -452,6 +454,11 @@ window.STATE =
       "k": "tests",
       "passed": 10,
       "failed": 0
+    },
+    {
+      "t": "2026-10-30T14:11:47+03:00",
+      "k": "finish",
+      "result": "CatPart: компактный каталог, 26 иллюстраций, WebP, контакты, безопасная корзина и брендбук"
     }
   ],
   "reqList": [
@@ -572,7 +579,7 @@ window.STATE =
       "matched": 18
     }
   },
-  "result": null,
+  "result": "CatPart: компактный каталог, 26 иллюстраций, WebP, контакты, безопасная корзина и брендбук",
   "report": [
     "Сайт подготовлен и проверен локально; публикация на хостинг и реальная доставка писем не выполнялись."
   ]
