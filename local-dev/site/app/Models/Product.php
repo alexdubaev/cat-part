@@ -109,6 +109,19 @@ final class Product
         );
     }
 
+    /** Fresh active product snapshot for cart/order validation. */
+    public static function findActiveById(int $id): ?array
+    {
+        if ($id < 1) {
+            return null;
+        }
+        return App::db()->fetch(
+            'SELECT id, slug, sku, name, price, in_stock, image_url
+               FROM products WHERE id = :id AND is_active = 1 LIMIT 1',
+            ['id' => $id]
+        );
+    }
+
     /**
      * Характеристики карточки. Единица измерения лежит в attributes.unit ОТДЕЛЬНО
      * от имени (см. комментарий к схеме) — склеиваем только при выводе.

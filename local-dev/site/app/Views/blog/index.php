@@ -20,7 +20,7 @@ $posts = $posts ?? [];
 
     <?php if ($posts === []): ?>
         <p class="cp-empty">Статьи готовятся. А пока нужна деталь — напишите номер на
-            <a href="mailto:<?= e(cfg('site.email')) ?>"><?= e(cfg('site.email')) ?></a>,
+            <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>,
             подберём и проверим применимость.</p>
     <?php else: ?>
         <div class="cp-posts">
@@ -41,7 +41,7 @@ $posts = $posts ?? [];
                     машины — ответим по применимости.</p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(cfg('site.email')) ?>">Написать нам</a>
+                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>">Написать нам</a>
                 <a class="cp-btn cp-btn--ghost" href="<?= e(url('/catalog')) ?>">Каталог</a>
             </div>
         </div>

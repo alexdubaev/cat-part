@@ -60,6 +60,68 @@ function asset_exists(string $path): bool
     return is_file($docRoot . '/assets/' . ltrim($path, '/'));
 }
 
+/** Static graphics shipped with the homepage; database image_url stays optional. */
+function category_graphic(string $slug, string $icon = ''): string
+{
+    $map = [
+        'gidravlika' => 'hydraulics', 'dvigatel' => 'engine', 'kabiny' => 'cab',
+        'komplekty-modernizacii-remonta' => 'repair-kit',
+        'konstrukcii-sistemnye-komponenty' => 'structural',
+        'krepezh-uplotniteli-rashodnye' => 'fasteners',
+        'materialy-dlya-masterskih' => 'workshop',
+        'modernizaciya-oborudovaniya' => 'upgrade',
+        'navesnoe-oborudovanie' => 'attachments',
+        'osnastka-zemleroynyh-orudiy' => 'ground-engaging', 'silovaya-peredacha' => 'drivetrain',
+        'filtry-i-zhidkosti' => 'filters', 'hodovaya-chast' => 'undercarriage',
+        'shlangi-i-trubki' => 'hoses', 'elektricheskoe-oborudovanie' => 'electrical',
+        '8t-1687-pryamoy-perehodnik-3' => 'adapter',
+        '9s-8009-1-zaglushka-s-shestigrannoy-rezboy-3' => 'plug',
+        'produkciya-cat-reman' => 'reman',
+    ];
+    $name = $map[$slug] ?? ($icon !== '' ? $icon : 'part');
+    return 'img/catalog-icons/' . $name . '.webp';
+}
+
+function benefit_graphic(string $name): string
+{
+    $name = match ($name) {
+        'in-stock' => 'stock',
+        'made-to-order' => 'special-order',
+        'originals-and-analogs' => 'original-analog',
+        'accurate-fit' => 'selection',
+        default => $name,
+    };
+    return 'img/benefits/' . $name . '.webp';
+}
+
+function article_graphic(string $slug, bool $thumb = false): string
+{
+    $name = match ($slug) {
+        'filtry-i-rabochie-zhidkosti-poddelka' => 'filtry-i-rabochie-zhidkosti-poddelka',
+        'hodovaya-chast-kogda-menyat' => 'hodovaya-chast-kogda-menyat',
+        'original-analog-ili-reman' => 'original-analog-ili-reman',
+        'kak-ustroen-nomer-detali-caterpillar' => 'kak-ustroen-nomer-detali-caterpillar',
+        default => 'article-default',
+    };
+    return 'img/articles/' . $name . ($thumb ? '-thumb' : '') . '.webp';
+}
+
+/** Prefer cached WebP derivatives for product photos while keeping PNG originals intact. */
+function product_image_url(string $url): string
+{
+    $url = trim($url);
+    if ($url === '' || !preg_match('/\.png(?:\?.*)?$/i', $url)) {
+        return $url;
+    }
+    $candidate = preg_replace('/\.png(?=($|\?))/i', '.webp', $url) ?? $url;
+    $path = (string) parse_url($candidate, PHP_URL_PATH);
+    $root = rtrim((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''), '/\\');
+    if ($root !== '' && is_file($root . '/' . ltrim($path, '/'))) {
+        return $candidate;
+    }
+    return $url;
+}
+
 /** Цена в рублях: 12 500 ₽ (или «по запросу», если null/0). */
 function money(int|float|string|null $value): string
 {
@@ -91,6 +153,16 @@ function is_authenticated(): bool
 function cfg(string $key, mixed $default = null): mixed
 {
     return App::config($key, $default);
+}
+
+/** Safe public brand facts; intentionally separate from secret-bearing config files. */
+function brand_setting(string $key, mixed $default = null): mixed
+{
+    static $brand;
+    if (!is_array($brand)) {
+        $brand = require __DIR__ . '/../Config/branding.php';
+    }
+    return $brand[$key] ?? $default;
 }
 
 /** Количество позиций в корзине (для бейджа в шапке). */

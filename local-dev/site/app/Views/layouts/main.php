@@ -32,7 +32,7 @@ $canonical = url((string) ($P['canonical'] ?? '/'));
 $ogImage = url(trim((string) ($P['og_image'] ?? '')) ?: asset('img/og-default.jpg'));
 
 $phone = trim((string) cfg('site.phone', ''));
-$email = trim((string) cfg('site.email', ''));
+$email = trim((string) brand_setting('email', cfg('site.email', '')));
 $city  = trim((string) cfg('site.city', ''));
 
 /*

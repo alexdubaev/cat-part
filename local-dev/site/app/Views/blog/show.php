@@ -14,6 +14,10 @@ $related = $related ?? [];
 
 $title = (string) ($post['title'] ?? '');
 $cover = trim((string) ($post['image_url'] ?? ''));
+if ($cover === '') {
+    $mapped = article_graphic((string) ($post['slug'] ?? ''));
+    if (asset_exists($mapped)) { $cover = asset($mapped); }
+}
 
 // Битая/пустая дата → блок не выводим вовсе, а не печатаем '01.01.1970'.
 $ts = strtotime((string) ($post['published_at'] ?? ''));
@@ -34,7 +38,7 @@ $ts = strtotime((string) ($post['published_at'] ?? ''));
                      читаться без них. Никакой заглушки на месте картинки: текст просто
                      начинается сразу под заголовком. Появится файл — обложка включится сама.
                      alt пустой: обложка декоративная, заголовок рядом уже всё сказал. */ ?>
-            <img class="cp-art__cover" src="<?= e($cover) ?>" alt="" loading="lazy" decoding="async">
+            <img class="cp-art__cover" src="<?= e($cover) ?>" alt="" loading="lazy" decoding="async" width="1200" height="675">
         <?php endif; ?>
 
         <?php /* body_html — заведомо HTML из БД (чистый набор тегов из db/seed_articles.sql),

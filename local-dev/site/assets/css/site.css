@@ -155,6 +155,8 @@ h1, h2, h3 { line-height: 1.18; letter-spacing: -.015em; margin: 0; }
 }
 
 .cp-section { padding: 34px 20px; }
+.cp-section--catalog { padding-top: 28px; padding-bottom: 28px; }
+.cp-section--catalog .cp-section__head { margin-bottom: 12px; }
 .cp-section--tight { padding-top: 10px; }
 
 .cp-section__head {
@@ -608,14 +610,15 @@ h1, h2, h3 { line-height: 1.18; letter-spacing: -.015em; margin: 0; }
 /* ── 8. Плитки категорий ──────────────────────────────────────────────────── */
 
 .cp-grid { display: grid; gap: 14px; }
-.cp-grid--cat { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.cp-grid--cat { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
 .cp-grid--prod { grid-template-columns: repeat(auto-fill, minmax(224px, 1fr)); }
 
 .cp-cat {
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px;
+  gap: 9px;
+  padding: 6px 8px;
   background: var(--cp-card);
   border: 1px solid var(--cp-line);
   border-radius: var(--cp-r-lg);
@@ -630,17 +633,18 @@ h1, h2, h3 { line-height: 1.18; letter-spacing: -.015em; margin: 0; }
   text-decoration: none;
 }
 .cp-cat__ic {
-  width: 44px; height: 44px;
+  width: 38px; height: 38px;
   flex: none;
-  padding: 10px;
+  padding: 0;
   border-radius: 12px;
-  background: linear-gradient(145deg, #fff2e8, #ffe2cf);
+  object-fit: contain;
+  background: #fff9e5;
   color: var(--cp-orange-dk);
   transition: background var(--cp-t), color var(--cp-t);
 }
 .cp-cat:hover .cp-cat__ic { background: linear-gradient(145deg, var(--cp-orange-lt), var(--cp-orange)); color: #fff; }
-.cp-cat__txt { min-width: 0; }
-.cp-cat__name { display: block; font-weight: 700; font-size: 15px; line-height: 1.3; }
+.cp-cat__txt { min-width: 0; overflow-wrap: anywhere; }
+.cp-cat__name { display: block; font-weight: 700; font-size: 14px; line-height: 1.2; }
 /* products_count показываем только когда он реальный (> 0):
    заглушка «0 позиций» на витрине хуже, чем её отсутствие. */
 .cp-cat__cnt { display: block; font-size: 12px; color: var(--cp-mute); margin-top: 3px; }
@@ -1165,22 +1169,23 @@ h1, h2, h3 { line-height: 1.18; letter-spacing: -.015em; margin: 0; }
    Ховера у плитки нет намеренно: она никуда не ведёт, а подъём и подсветка
    кромки обещают клик, которого не будет (та же логика, что у карточек выдачи
    в разделе 18). */
-.cp-why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.cp-why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .cp-why__i {
   display: flex;
   flex-direction: column;
-  padding: 22px;
+  padding: 18px;
   background: var(--cp-card);
   border: 1px solid var(--cp-line);
   border-radius: var(--cp-r-lg);
   box-shadow: var(--cp-sh-1);
 }
 .cp-why__ic {
-  width: 42px; height: 42px;
-  padding: 9px;
-  margin-bottom: 14px;
+  width: 100%; height: 82px;
+  padding: 0;
+  margin-bottom: 10px;
   border-radius: 12px;
-  background: linear-gradient(145deg, #fff2e8, #ffe2cf);
+  object-fit: contain;
+  background: #fff9e5;
   color: var(--cp-orange-dk);
 }
 .cp-why__t { font-size: 16px; font-weight: 700; line-height: 1.3; color: var(--cp-ink); margin-bottom: 6px; }
@@ -1675,6 +1680,22 @@ a.cp-chip:hover { border-color: var(--cp-orange); color: var(--cp-orange-dk); te
 .cp-container { max-width: var(--cp-wrap); margin: 0 auto; padding-left: 20px; padding-right: 20px; }
 
 .cp-search__title { font-size: 34px; font-weight: 800; margin: 0 0 18px; }
+
+.cp-cart-layout { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(300px,.7fr); gap:24px; align-items:start; }
+.cp-form-ok,.cp-form-error { padding:12px 14px; border-radius:10px; margin:0 0 16px; }
+.cp-form-ok { background:#e9f7ef; color:#176b3a; }.cp-form-error { background:#fff0ee; color:#9a2d22; }
+.cp-cart-lines { display:grid; gap:12px; }
+.cp-cart-line, .cp-cart-checkout { padding:20px; background:var(--cp-card); border:1px solid var(--cp-line); border-radius:var(--cp-r-lg); box-shadow:var(--cp-sh-1); }
+.cp-cart-line { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:18px; align-items:center; }
+.cp-cart-line h2 { margin:5px 0 8px; font-size:17px; }
+.cp-cart-line__price { font-weight:700; color:var(--cp-orange-dk); }
+.cp-cart-line__qty { display:flex; align-items:center; gap:8px; }
+.cp-cart-line__qty label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--cp-mute); }
+.cp-cart-line__qty input { width:70px; height:38px; padding:0 8px; border:1px solid var(--cp-line); border-radius:8px; font:inherit; }
+.cp-cart-line__remove { border:0; background:none; color:var(--cp-mute); text-decoration:underline; cursor:pointer; }
+.cp-cart-checkout h2 { margin-top:0; }.cp-cart-checkout p { color:var(--cp-mute); font-size:14px; line-height:1.5; }
+.cp-cart-checkout form { display:grid; gap:12px; }.cp-cart-checkout .cp-btn { width:100%; justify-content:center; }
+@media (max-width:760px){.cp-cart-layout{grid-template-columns:1fr}.cp-cart-line{grid-template-columns:1fr}.cp-cart-line__qty{justify-content:space-between}.cp-cart-line__remove{justify-self:start}}
 
 /* Форма на светлом полотне: те же 50px и та же геометрия, что в шапке */
 .cp-search__form { display: flex; gap: 10px; max-width: 720px; margin: 0 0 12px; }

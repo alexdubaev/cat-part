@@ -43,7 +43,7 @@ declare(strict_types=1);
                     заказа — они зависят от состава заказа и от того, оформляете вы покупку
                     как организация или как частное лицо.</p>
                 <p>Есть вопрос по расчётам до заказа — напишите на
-                    <a href="mailto:<?= e(cfg('site.email')) ?>"><?= e(cfg('site.email')) ?></a>,
+                    <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>,
                     ответим по вашей ситуации.</p>
             </div>
 
@@ -72,7 +72,7 @@ declare(strict_types=1);
                     со стоимостью и условиями.</p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(cfg('site.email')) ?>">Написать нам</a>
+                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>">Написать нам</a>
                 <a class="cp-btn cp-btn--ghost" href="<?= e(url('/dostavka')) ?>">Доставка</a>
             </div>
         </div>

@@ -43,7 +43,7 @@ $visible = 10;
 <section class="cp-wrap cp-section" id="razdely">
     <?php if ($cats === []): ?>
         <p class="cp-empty">Разделы каталога появятся после загрузки данных. Нужна деталь сейчас —
-            напишите: <a href="mailto:<?= e(cfg('site.email')) ?>"><?= e(cfg('site.email')) ?></a>.</p>
+            напишите: <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>.</p>
     <?php else: ?>
         <div class="cp-grid cp-grid--group">
             <?php foreach ($cats as $c): ?>

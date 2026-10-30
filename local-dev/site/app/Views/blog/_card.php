@@ -18,6 +18,10 @@ $pTitle   = (string) ($p['title'] ?? '');
 $pHref    = url('/stati/' . (string) ($p['slug'] ?? ''));
 $pExcerpt = trim((string) ($p['excerpt'] ?? ''));
 $pImage   = trim((string) ($p['image_url'] ?? ''));
+if ($pImage === '') {
+    $mapped = article_graphic((string) ($p['slug'] ?? ''), true);
+    if (asset_exists($mapped)) { $pImage = asset($mapped); }
+}
 
 // strtotime вернёт false на пустой/битой дате — тогда блок с датой просто не выводим,
 // а не печатаем '01.01.1970'.
@@ -31,7 +35,7 @@ $pTs = strtotime((string) ($p['published_at'] ?? ''));
                  никаких «серых квадратов»-заглушек и битых <img> с крестиком.
                  Появится картинка — блок включится сам, править шаблон не нужно. */ ?>
         <div class="cp-post__media">
-            <img class="cp-post__img" src="<?= e($pImage) ?>" alt="" loading="lazy" decoding="async">
+            <img class="cp-post__img" src="<?= e($pImage) ?>" alt="" loading="lazy" decoding="async" width="600" height="338">
         </div>
     <?php endif; ?>
 

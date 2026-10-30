@@ -20,9 +20,9 @@ declare(strict_types=1);
     <div class="cp-doc">
         <h1 class="cp-h1">О компании</h1>
         <div class="cp-prose">
-            <p><?= e(cfg('site.name')) ?> — независимый поставщик запчастей для техники Caterpillar.
-                Мы помогаем найти нужную деталь по номеру, кросс-номеру или описанию узла
-                и поставить её туда, где стоит машина.</p>
+            <p><?= e(cfg('site.name')) ?> — сайт компании <?= e((string) brand_setting('company', 'СМ ТЕХНО')) ?>,
+                поставщика запчастей для техники Caterpillar. Предлагаем оригинальные детали
+                и качественные аналоги, в наличии и под заказ, с поставкой по России.</p>
 
             <h2>Чем мы занимаемся</h2>
             <p>Спецтехника простаивает не потому, что деталь невозможно купить, а потому что её
@@ -70,7 +70,7 @@ declare(strict_types=1);
                     описание узла. Ответим с вариантами применимости.</p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(cfg('site.email')) ?>">Написать нам</a>
+                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>">Написать нам</a>
                 <a class="cp-btn cp-btn--ghost" href="<?= e(url('/catalog')) ?>">Каталог</a>
             </div>
         </div>

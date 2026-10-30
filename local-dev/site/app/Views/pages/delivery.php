@@ -72,7 +72,7 @@ declare(strict_types=1);
                     со сроком и стоимостью по вашему заказу.</p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(cfg('site.email')) ?>">Написать нам</a>
+                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>">Написать нам</a>
             </div>
         </div>
     </div>

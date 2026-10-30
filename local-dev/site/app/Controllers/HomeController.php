@@ -46,11 +46,11 @@ final class HomeController extends Controller
             ],
             'rootCategories' => Category::roots(),
 
-            // Три свежие статьи для блока на главной. Ключи строк —
+            // Все опубликованные стартовые статьи для блока на главной. Ключи строк —
             // slug, title, excerpt, image_url, published_at (см. Post::latest()).
             // Пустой массив, пока статьи не залиты, — вьюха обязана это пережить
             // и просто не показать блок.
-            'articles' => Post::latest(3),
+            'articles' => Post::latest(4),
         ]);
     }
 }

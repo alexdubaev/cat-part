@@ -47,7 +47,7 @@ $baseUrl  = (string) ($baseUrl ?? '/catalog');
 
     <?php if ($products === []): ?>
         <p class="cp-empty">В этом разделе пока нет позиций. Напишите номер детали на
-            <a href="mailto:<?= e(cfg('site.email')) ?>"><?= e(cfg('site.email')) ?></a> —
+            <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a> —
             проверим наличие и подберём аналог.</p>
     <?php else: ?>
         <p class="cp-count">
@@ -61,7 +61,7 @@ $baseUrl  = (string) ($baseUrl ?? '/catalog');
                 $href  = url('/tovar/' . (string) $p['slug']);
                 $price = (float) ($p['price'] ?? 0);
                 $sku   = trim((string) ($p['sku'] ?? ''));
-                $img   = trim((string) ($p['image_url'] ?? ''));
+                $img   = product_image_url((string) ($p['image_url'] ?? ''));
                 ?>
                 <article class="cp-prod">
                     <a class="cp-prod__img" href="<?= e($href) ?>" tabindex="-1" aria-hidden="true">

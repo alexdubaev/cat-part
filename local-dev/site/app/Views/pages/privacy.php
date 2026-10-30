@@ -22,7 +22,7 @@ declare(strict_types=1);
  * @var array<string,mixed> $page
  */
 
-$email = trim((string) cfg('site.email', ''));
+$email = trim((string) brand_setting('email', cfg('site.email', '')));
 $legal = trim((string) cfg('site.legal', ''));
 $inn   = trim((string) cfg('site.inn', ''));
 $ogrn  = trim((string) cfg('site.ogrn', ''));

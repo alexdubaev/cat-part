@@ -22,8 +22,9 @@ declare(strict_types=1);
 
 $phone    = trim((string) cfg('site.phone', ''));
 $phoneRaw = trim((string) cfg('site.phone_raw', ''));
-$email    = trim((string) cfg('site.email', ''));
-$address  = trim((string) cfg('site.address', ''));
+$email    = trim((string) brand_setting('email', cfg('site.email', '')));
+$brandPhones = (array) brand_setting('phones', []);
+$address  = trim((string) brand_setting('address', cfg('site.address', '')));
 $legal    = trim((string) cfg('site.legal', ''));
 $inn      = trim((string) cfg('site.inn', ''));
 $ogrn     = trim((string) cfg('site.ogrn', ''));
@@ -53,9 +54,8 @@ $heroExists = asset_exists($heroImage);
                      главной. На узких экранах заголовок переносится и сам — лишний <br>
                      там просто делает вторую строку короче, ничего не ломая. */ ?>
             <h1 class="cp-hero__title">Контакты и<br><b>подбор</b> запчастей</h1>
-            <p class="cp-hero__text">Единственный канал связи сейчас — почта. Пришлите номер
-                детали или опишите узел: подтвердим применимость и ответим по вашей задаче,
-                а не шаблоном.</p>
+            <p class="cp-hero__text">Свяжитесь с СМ ТЕХНО по телефону или почте. Пришлите номер
+                детали или опишите узел: подтвердим применимость и ответим по вашей задаче.</p>
 
             <?php /* Список, а не три абзаца: это перечисление, и скринридер обязан
                      объявить его как список из трёх пунктов. */ ?>
@@ -115,6 +115,14 @@ $heroExists = asset_exists($heroImage);
                 </span>
             </div>
         <?php endif; ?>
+
+        <?php foreach ($brandPhones as $phoneItem): ?>
+            <div class="cp-contact__item">
+                <svg class="cp-contact__ic" aria-hidden="true"><use href="#cp-i-phone"></use></svg>
+                <span class="cp-contact__lbl">Телефон</span>
+                <span class="cp-contact__val"><a href="tel:<?= e((string) ($phoneItem['tel'] ?? '')) ?>"><?= e((string) ($phoneItem['label'] ?? '')) ?></a></span>
+            </div>
+        <?php endforeach; ?>
 
         <?php if ($address !== ''): ?>
             <div class="cp-contact__item">

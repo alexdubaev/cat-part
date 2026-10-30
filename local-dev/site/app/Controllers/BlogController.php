@@ -81,6 +81,12 @@ final class BlogController extends Controller
         // через url() и выдал в <meta og:image> голый адрес сайта вместо изображения.
         // Пока ключа нет, layout сам подставит дефолтную OG-картинку.
         $image = trim((string) ($post['image_url'] ?? ''));
+        if ($image === '') {
+            $mapped = article_graphic((string) ($post['slug'] ?? ''));
+            if (asset_exists($mapped)) {
+                $image = asset($mapped);
+            }
+        }
         if ($image !== '') {
             $page['og_image'] = $image;
         }
@@ -127,8 +133,13 @@ final class BlogController extends Controller
         // url() отдаёт внешнюю ссылку как есть, а внутренний путь делает абсолютным —
         // относительный адрес в разметке бесполезен. Донор склеивал base_url с image_url
         // вручную и на абсолютном адресе выдал бы 'https://сайт.ru https://cdn…'.
-        if (!empty($post['image_url'])) {
-            $ld['image'] = url((string) $post['image_url']);
+        $image = trim((string) ($post['image_url'] ?? ''));
+        if ($image === '') {
+            $mapped = article_graphic((string) ($post['slug'] ?? ''));
+            if (asset_exists($mapped)) { $image = asset($mapped); }
+        }
+        if ($image !== '') {
+            $ld['image'] = url($image);
         }
 
         return $ld;

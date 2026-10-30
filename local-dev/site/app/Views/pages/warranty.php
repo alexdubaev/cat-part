@@ -42,7 +42,7 @@ declare(strict_types=1);
                 или изменённая деталь — это уже другой разговор, гораздо более сложный.</p>
 
             <h2>Если есть претензия к качеству</h2>
-            <p>Напишите на <a href="mailto:<?= e(cfg('site.email')) ?>"><?= e(cfg('site.email')) ?></a>
+            <p>Напишите на <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>
                 и приложите:</p>
             <ul>
                 <li>номер заказа и артикул позиции;</li>
@@ -81,7 +81,7 @@ declare(strict_types=1);
                     и предложим решение.</p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(cfg('site.email')) ?>">Написать нам</a>
+                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>">Написать нам</a>
             </div>
         </div>
     </div>

@@ -38,7 +38,7 @@ $inStock = !empty($product['in_stock']);
 $body    = trim((string) ($product['body_html'] ?? ''));
 
 // Главное фото — первое в списке (сортировка уже по is_primary DESC).
-$main = (string) ($images[0]['url'] ?? ($product['image_url'] ?? ''));
+$main = product_image_url((string) ($images[0]['url'] ?? ($product['image_url'] ?? '')));
 
 /**
  * Значение характеристики строкой. value_num без value_str встречается редко,
@@ -94,9 +94,9 @@ foreach ($attributes as $a) {
                     <div class="cp-gal__thumbs" data-gal-thumbs>
                         <?php foreach ($images as $i => $img): ?>
                             <button class="cp-gal__thumb<?= $i === 0 ? ' is-active' : '' ?>"
-                                    type="button" data-gal-src="<?= e((string) $img['url']) ?>"
+                                    type="button" data-gal-src="<?= e(product_image_url((string) $img['url'])) ?>"
                                     aria-label="Фото <?= e((string) ($i + 1)) ?>">
-                                <img src="<?= e((string) $img['url']) ?>" alt="" loading="lazy" width="88" height="66">
+                                <img src="<?= e(product_image_url((string) $img['url'])) ?>" alt="" loading="lazy" width="88" height="66">
                             </button>
                         <?php endforeach; ?>
                     </div>
@@ -223,7 +223,7 @@ foreach ($attributes as $a) {
                 <?php foreach ($neighbours as $p): ?>
                     <?php
                     $href = url('/tovar/' . (string) $p['slug']);
-                    $img  = trim((string) ($p['image_url'] ?? ''));
+                    $img  = product_image_url((string) ($p['image_url'] ?? ''));
                     ?>
                     <article class="cp-prod">
                         <a class="cp-prod__img" href="<?= e($href) ?>" tabindex="-1" aria-hidden="true">

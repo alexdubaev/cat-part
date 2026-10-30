@@ -131,7 +131,7 @@ $heroExists = asset_exists($heroImage);
     </div>
 </section>
 
-<section class="cp-wrap cp-section">
+<section class="cp-wrap cp-section cp-section--catalog">
     <div class="cp-section__head">
         <h2>Разделы каталога</h2>
         <a class="cp-section__more" href="<?= e(url('/catalog')) ?>">Весь каталог →</a>
@@ -139,15 +139,18 @@ $heroExists = asset_exists($heroImage);
 
     <?php if ($cats === []): ?>
         <p class="cp-empty">Каталог наполняется. Напишите нам — подберём деталь по номеру вручную:
-            <a href="mailto:<?= e(cfg('site.email')) ?>"><?= e(cfg('site.email')) ?></a>.</p>
+            <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>.</p>
     <?php else: ?>
         <div class="cp-grid cp-grid--cat">
             <?php foreach ($cats as $c): ?>
                 <?php $cnt = (int) ($c['products_count'] ?? 0); ?>
                 <a class="cp-cat" href="<?= e(url('/catalog/' . (string) $c['slug'])) ?>">
-                    <svg class="cp-cat__ic" aria-hidden="true">
-                        <use href="#cp-i-<?= e(($c['icon'] ?? '') !== '' ? (string) $c['icon'] : 'part') ?>"></use>
-                    </svg>
+                    <?php $catGraphic = category_graphic((string) ($c['slug'] ?? ''), (string) ($c['icon'] ?? '')); ?>
+                    <?php if (asset_exists($catGraphic)): ?>
+                        <img class="cp-cat__ic" src="<?= e(asset($catGraphic)) ?>" alt="" loading="lazy" decoding="async" width="72" height="72">
+                    <?php else: ?>
+                        <svg class="cp-cat__ic" aria-hidden="true"><use href="#cp-i-<?= e(($c['icon'] ?? '') !== '' ? (string) $c['icon'] : 'part') ?>"></use></svg>
+                    <?php endif; ?>
                     <span class="cp-cat__txt">
                         <span class="cp-cat__name"><?= e($c['name']) ?></span>
                         <?php /* Счётчик — только реальный. До импорта он 0, и «0 позиций»
@@ -189,17 +192,10 @@ $heroExists = asset_exists($heroImage);
 
     <div class="cp-about cp-about--solo">
         <div class="cp-about__txt">
-            <p><strong><?= e(cfg('site.name')) ?></strong> — независимый поставщик запчастей
-                для техники Caterpillar. Сайт устроен вокруг одной задачи: опознать деталь
-                и подтвердить, что она подойдёт к вашей машине.</p>
-            <p>Техника простаивает не потому, что деталь невозможно купить, а потому что её
-                долго идентифицируют: номер на снятой детали стёрт, в документах — старый
-                индекс, на складе лежит аналог под чужим артикулом. Поэтому поиск по артикулу
-                и кросс-номерам у нас на первом экране, а разделы каталога повторяют логику
-                узлов машины, а не структуру прайс-листа.</p>
-            <p>Номера нет вовсе — это не тупик: деталь определяется по модели машины,
-                серийному номеру и описанию узла. Напишите, что случилось с машиной,
-                — разберёмся вместе.</p>
+            <p><strong><?= e(cfg('site.name')) ?></strong> — сайт компании СМ ТЕХНО, поставщика
+                оригинальных деталей и качественных аналогов для техники Caterpillar.</p>
+            <p>Поставляем запчасти по России: позиции бывают в наличии и под заказ. Подберём
+                деталь по артикулу, каталогу, фотографии или описанию узла.</p>
         </div>
     </div>
 </section>
@@ -221,41 +217,24 @@ $heroExists = asset_exists($heroImage);
 
     <div class="cp-why">
         <div class="cp-why__i">
-            <svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-search"></use></svg>
-            <span class="cp-why__t">Номер в любом написании</span>
-            <span class="cp-why__d">Регистр, пробелы и дефисы не важны: <code>3B-8489</code>,
-                <code>3b 8489</code> и <code>3B8489</code> — один и тот же артикул.
-                Не нужно гадать, как он записан в базе.</span>
+            <?php $benefit = benefit_graphic('in-stock'); ?><?php if (asset_exists($benefit)): ?><img class="cp-why__ic" src="<?= e(asset($benefit)) ?>" alt="" loading="lazy" width="128" height="96"><?php else: ?><svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-check"></use></svg><?php endif; ?>
+            <span class="cp-why__t">Запчасти в наличии</span>
+            <span class="cp-why__d">Ходовые позиции доступны к отгрузке без долгого ожидания.</span>
         </div>
         <div class="cp-why__i">
-            <svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-cross"></use></svg>
-            <span class="cp-why__t">Кросс-номера и обезличенные номера</span>
-            <span class="cp-why__d">Номер со снятой детали чужой или устаревший — ищем
-                по кросс-номерам и выходим на действующую позицию.</span>
+            <?php $benefit = benefit_graphic('made-to-order'); ?><?php if (asset_exists($benefit)): ?><img class="cp-why__ic" src="<?= e(asset($benefit)) ?>" alt="" loading="lazy" width="128" height="96"><?php else: ?><svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-kit"></use></svg><?php endif; ?>
+            <span class="cp-why__t">Поставка под заказ</span>
+            <span class="cp-why__d">Найдём и поставим редкие позиции, узлы и комплектующие под конкретную технику.</span>
         </div>
         <div class="cp-why__i">
-            <svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-layers"></use></svg>
-            <span class="cp-why__t">Оригинал и аналог рядом</span>
-            <span class="cp-why__d">Показываем варианты применимости: оригинальную деталь
-                и совместимые замены. Выбор остаётся за вами, а не за нами.</span>
+            <?php $benefit = benefit_graphic('originals-and-analogs'); ?><?php if (asset_exists($benefit)): ?><img class="cp-why__ic" src="<?= e(asset($benefit)) ?>" alt="" loading="lazy" width="128" height="96"><?php else: ?><svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-layers"></use></svg><?php endif; ?>
+            <span class="cp-why__t">Оригиналы и аналоги</span>
+            <span class="cp-why__d">Подберём решение под бюджет и задачи эксплуатации, а выбор останется за вами.</span>
         </div>
         <div class="cp-why__i">
-            <svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-workshop"></use></svg>
-            <span class="cp-why__t">Подбор по узлу</span>
-            <span class="cp-why__d">Номера нет — определим деталь по модели машины, серийному
-                номеру и описанию узла. Это нормальная рабочая ситуация, а не исключение.</span>
-        </div>
-        <div class="cp-why__i">
-            <svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-shield"></use></svg>
-            <span class="cp-why__t">Оригинал и аналог на выбор</span>
-            <span class="cp-why__d">Не связаны обязательствами дилерской сети — предлагаем
-                и оригинальную деталь, и совместимый аналог, смотря что важнее: ресурс, срок или цена.</span>
-        </div>
-        <div class="cp-why__i">
-            <svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-mail"></use></svg>
-            <span class="cp-why__t">Ответ по вашей задаче</span>
-            <span class="cp-why__d">Присылаете номер, фото и данные машины — получаете варианты
-                применимости и условия поставки, а не выгрузку прайса в ответ.</span>
+            <?php $benefit = benefit_graphic('accurate-fit'); ?><?php if (asset_exists($benefit)): ?><img class="cp-why__ic" src="<?= e(asset($benefit)) ?>" alt="" loading="lazy" width="128" height="96"><?php else: ?><svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-search"></use></svg><?php endif; ?>
+            <span class="cp-why__t">Точный подбор</span>
+            <span class="cp-why__d">Идентифицируем деталь по артикулу, каталогу, фото или описанию узла.</span>
         </div>
     </div>
 </section>
@@ -269,7 +248,7 @@ $heroExists = asset_exists($heroImage);
                     машины и опишите узел — ответим с вариантами применимости и условиями поставки.</p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(cfg('site.email')) ?>">Написать нам</a>
+                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>">Написать нам</a>
                 <a class="cp-btn cp-btn--ghost" href="<?= e(url('/kontakty')) ?>">Контакты</a>
             </div>
         </div>
@@ -337,6 +316,10 @@ require __DIR__ . '/partials/leadform.php';
 
             $excerpt = trim((string) ($a['excerpt'] ?? ''));
             $img     = trim((string) ($a['image_url'] ?? ''));
+            if ($img === '') {
+                $mapped = article_graphic($slug, true);
+                if (asset_exists($mapped)) { $img = asset($mapped); }
+            }
             $when    = $dateRu($a['published_at'] ?? null);
             ?>
             <article class="cp-post">
@@ -347,7 +330,7 @@ require __DIR__ . '/partials/leadform.php';
                              alt пустой: смысл несёт заголовок рядом, дублировать его в alt —
                              заставлять скринридер читать одно и то же дважды. */ ?>
                     <div class="cp-post__media">
-                        <img class="cp-post__img" src="<?= e($img) ?>" alt="" loading="lazy" decoding="async">
+                        <img class="cp-post__img" src="<?= e(str_starts_with($img, '/') ? $img : $img) ?>" alt="" loading="lazy" decoding="async" width="600" height="338">
                     </div>
                 <?php endif; ?>
 

@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 $phone    = trim((string) cfg('site.phone', ''));
 $phoneRaw = trim((string) cfg('site.phone_raw', ''));
-$email    = trim((string) cfg('site.email', ''));
+$email    = trim((string) brand_setting('email', cfg('site.email', '')));
+$brandPhones = (array) brand_setting('phones', []);
+$brandAddress = trim((string) brand_setting('address', ''));
 $legal    = trim((string) cfg('site.legal', ''));
 
 ?>
@@ -37,6 +39,10 @@ $legal    = trim((string) cfg('site.legal', ''));
             <?php if ($email !== ''): ?>
                 <a class="cp-ft__mail" href="mailto:<?= e($email) ?>"><?= e($email) ?></a>
             <?php endif; ?>
+            <?php foreach ($brandPhones as $phoneItem): ?>
+                <a class="cp-ft__mail" href="tel:<?= e((string) ($phoneItem['tel'] ?? '')) ?>"><?= e((string) ($phoneItem['label'] ?? '')) ?></a>
+            <?php endforeach; ?>
+            <?php if ($brandAddress !== ''): ?><span class="cp-ft__mail"><?= e($brandAddress) ?></span><?php endif; ?>
         </div>
 
         <div class="cp-ft__col">

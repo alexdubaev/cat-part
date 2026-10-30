@@ -19,7 +19,7 @@ $cartCount = cart_count();
 // не выводится — заглушки вида «+7 (___)» в вёрстке не появляется.
 $phone     = trim((string) cfg('site.phone', ''));
 $phoneRaw  = trim((string) cfg('site.phone_raw', ''));
-$email     = trim((string) cfg('site.email', ''));
+$email     = trim((string) brand_setting('email', cfg('site.email', '')));
 
 // Возврат запроса в поле после перехода на /poisk — иначе человек теряет
 // то, что искал, и печатает заново.
@@ -29,7 +29,7 @@ $q = isset($_GET['q']) && is_string($_GET['q']) ? $_GET['q'] : '';
 <header class="cp-hd">
     <div class="cp-wrap cp-hd__top">
         <a class="cp-logo cp-logo--img" href="<?= e(url('/')) ?>" aria-label="<?= e(cfg('site.name')) ?> — на главную">
-            <img class="cp-logo__img" src="<?= e(asset('img/logo.png')) ?>" alt="<?= e(cfg('site.name')) ?>" width="266" height="34">
+            <img class="cp-logo__img" src="<?= e(asset('img/logo.webp')) ?>" alt="<?= e(cfg('site.name')) ?>" width="266" height="34">
         </a>
 
         <form class="cp-search" action="<?= e(url('/poisk')) ?>" method="get" role="search">

@@ -60,16 +60,16 @@ declare(strict_types=1);
 
       <div class="cp-grid cp-search__results">
         <?php foreach ($products as $product): ?>
-          <?php $href = url('/tovar/' . (string) $product['slug']); ?>
+          <?php $href = url('/tovar/' . (string) $product['slug']); $productImage = product_image_url((string) ($product['image_url'] ?? '')); ?>
           <article class="cp-card">
             <a class="cp-card__media" href="<?= e($href) ?>" tabindex="-1" aria-hidden="true">
-              <?php if (!empty($product['image_url'])): ?>
+              <?php if ($productImage !== ''): ?>
                 <img
                   class="cp-card__img"
-                  src="<?= e($product['image_url']) ?>"
+                  src="<?= e($productImage) ?>"
                   alt="<?= e($product['name']) ?>"
                   loading="lazy"
-                  decoding="async">
+                  decoding="async" width="240" height="180">
               <?php endif; ?>
             </a>
             <div class="cp-card__body">
@@ -81,6 +81,10 @@ declare(strict_types=1);
               <div class="cp-card__stock<?= !empty($product['in_stock']) ? ' cp-card__stock--in' : '' ?>">
                 <?= !empty($product['in_stock']) ? 'В наличии' : 'Под заказ' ?>
               </div>
+              <form method="post" action="<?= e(url('/korzina/add')) ?>">
+                <?= csrf_field() ?><input type="hidden" name="product_id" value="<?= e((string) $product['id']) ?>">
+                <button class="cp-btn cp-btn--light cp-btn--sm" type="submit">В корзину</button>
+              </form>
             </div>
           </article>
         <?php endforeach; ?>
