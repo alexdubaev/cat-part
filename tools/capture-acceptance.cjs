@@ -4,7 +4,13 @@ const fs = require('fs');
 const path = require('path');
 const {pathToFileURL} = require('url');
 const root = path.resolve(__dirname,'..');
-const out = path.join(root,'.autopilot/2026-10-30-home-polish--wip/run');
+const autopilot = path.join(root,'.autopilot');
+const stateText = fs.readFileSync(path.join(autopilot,'state.js'),'utf8');
+const state = JSON.parse(stateText.slice(stateText.indexOf('=')+1).trim().replace(/;$/, ''));
+if(typeof state.dir!=='string'||!state.dir||path.basename(state.dir)!==state.dir||['.','..'].includes(state.dir))throw Error('Invalid Autopilot state.dir');
+const runDir = path.resolve(autopilot,state.dir);
+if(path.dirname(runDir)!==autopilot)throw Error('Autopilot run directory must stay inside .autopilot');
+const out = path.join(runDir,'run');
 async function loaded(page) {
   await page.evaluate(async()=>{
     document.documentElement.style.scrollBehavior='auto';

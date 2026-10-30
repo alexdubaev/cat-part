@@ -5,7 +5,14 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / ".autopilot/2026-10-30-home-polish--wip/asset-manifest.json"
+STATE = json.loads((ROOT / ".autopilot/state.js").read_text(encoding="utf-8").partition("=")[2].strip().removesuffix(";"))
+RUN_NAME = STATE.get("dir", "")
+if not isinstance(RUN_NAME, str) or not RUN_NAME or Path(RUN_NAME).name != RUN_NAME or RUN_NAME in (".", ".."):
+    raise ValueError("Invalid Autopilot state.dir")
+RUN_DIR = (ROOT / ".autopilot" / RUN_NAME).resolve()
+if RUN_DIR.parent != (ROOT / ".autopilot").resolve():
+    raise ValueError("Autopilot run directory must stay inside .autopilot")
+MANIFEST = RUN_DIR / "asset-manifest.json"
 PUBLIC = ROOT / "local-dev/site/assets/img"
 
 def main() -> None:
