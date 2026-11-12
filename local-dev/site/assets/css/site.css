@@ -611,6 +611,33 @@ h1, h2, h3 { line-height: 1.18; letter-spacing: -.015em; margin: 0; }
 
 .cp-grid { display: grid; gap: 14px; }
 .cp-grid--cat { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+.cp-grid--home-cat { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.cp-catalog-more { margin-top: 14px; }
+.cp-catalog-more__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: fit-content;
+  margin-left: auto;
+  padding: 10px 16px;
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-r);
+  background: var(--cp-card);
+  color: var(--cp-ink);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.cp-catalog-more__toggle::-webkit-details-marker { display: none; }
+.cp-catalog-more__toggle:hover { border-color: var(--cp-orange); }
+.cp-catalog-more__toggle:focus-visible { outline: 2px solid var(--cp-orange-dk); outline-offset: 3px; }
+.cp-catalog-more__open { display: none; }
+.cp-catalog-more[open] .cp-catalog-more__closed { display: none; }
+.cp-catalog-more[open] .cp-catalog-more__open { display: inline; }
+.cp-catalog-more[open] .cp-catalog-more__arrow { transform: rotate(180deg); }
+.cp-catalog-more[open] > .cp-grid { margin-top: 14px; }
 .cp-grid--prod { grid-template-columns: repeat(auto-fill, minmax(224px, 1fr)); }
 
 .cp-cat {
@@ -1563,7 +1590,14 @@ a.cp-chip:hover { border-color: var(--cp-orange); color: var(--cp-orange-dk); te
   .cp-hd { position: sticky; top: 0; z-index: 50; }
 }
 
+/* Край фонового кадра выходит за экран: справа от машины остаётся около 110px
+   при ширине 1920px, при этом фон остаётся одной непрерывной фотографией. */
+@media (min-width: 961px) {
+  .cp-hero--home .cp-hero__img { width: calc(100% + min(5vw, 100px)); max-width: none; }
+}
+
 @media (max-width: 1100px) {
+  .cp-grid--home-cat { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .cp-hd__mail { display: none; }
   .cp-ft__in { grid-template-columns: 1fr 1fr; gap: 28px; }
   /* Галерею ужимаем раньше, чем ломаем сетку: 520px рядом с текстом на 1024
@@ -1635,6 +1669,7 @@ a.cp-chip:hover { border-color: var(--cp-orange); color: var(--cp-orange-dk); te
   .cp-logo__sub { display: none; }
   .cp-grid--prod { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .cp-grid--cat { grid-template-columns: 1fr; }
+  .cp-grid--home-cat { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   /* Карточка товара — в одну колонку: фото сверху, покупка и характеристики под ним. */
   .cp-pcard { grid-template-columns: 1fr; gap: 20px; }
   .cp-pcard__h1 { font-size: 23px; }

@@ -26,6 +26,16 @@ declare(strict_types=1);
  */
 
 $cats = $rootCategories ?? [];
+$featuredSlugs = ['dvigatel', 'gidravlika', 'silovaya-peredacha', 'hodovaya-chast', 'shlangi-i-trubki', 'kabiny'];
+$catsBySlug = array_column($cats, null, 'slug');
+$featuredCats = [];
+foreach ($featuredSlugs as $slug) {
+    if (isset($catsBySlug[$slug])) {
+        $featuredCats[] = $catsBySlug[$slug];
+        unset($catsBySlug[$slug]);
+    }
+}
+$moreCats = array_values($catsBySlug);
 
 /*
  * Статьи приходят из HomeController (его пишет другой агент). Вьюха не считает
@@ -72,23 +82,21 @@ $dateRu = static function (mixed $raw): ?array {
 };
 
 /*
- * Картинка hero — прозрачный PNG, лежит в public/assets/img/.
- * Промт для генерации: см. docs/hero-image-prompt.md.
- *
- * Правая колонка рендерится ТОЛЬКО если файл реально есть. Пока картинки нет,
- * сетка схлопывается в одну колонку и hero выглядит законченным — вместо
- * битого <img> с крестиком или «серого квадрата-заглушки» на весь экран.
- * Файл появится — колонка включится сама, править шаблон не нужно.
+ * Цельный панорамный фон с достроенным правым краем; WebP для двух размеров.
+ * Описание исходника и генерации: deliverables/home-hero.md.
+ * Если файла нет, сохраняем текстовый hero без битого изображения.
  */
-$heroImage  = 'img/hero.webp';
+$heroImage  = 'img/hero-wide.webp';
 $heroExists = asset_exists($heroImage);
 
 ?>
-<section class="cp-hero<?= $heroExists ? ' cp-hero--media' : '' ?>">
+<section class="cp-hero cp-hero--home<?= $heroExists ? ' cp-hero--media' : '' ?>">
     <?php if ($heroExists): ?>
     <div class="cp-hero__media" aria-hidden="true">
         <img class="cp-hero__img" src="<?= e(asset($heroImage)) ?>" alt=""
-             loading="eager" fetchpriority="high" decoding="async" width="1983" height="793">
+             srcset="<?= e(asset('img/hero-wide-960.webp')) ?> 960w, <?= e(asset($heroImage)) ?> 2078w"
+             sizes="(min-width: 961px) calc(100vw + 5vw), 100vw"
+             loading="eager" fetchpriority="high" decoding="async" width="2078" height="757">
     </div>
     <?php endif; ?>
     <div class="cp-wrap cp-hero__in">
@@ -134,15 +142,24 @@ $heroExists = asset_exists($heroImage);
 <section class="cp-wrap cp-section cp-section--catalog">
     <div class="cp-section__head">
         <h2>Разделы каталога</h2>
-        <a class="cp-section__more" href="<?= e(url('/catalog')) ?>">Весь каталог →</a>
     </div>
 
     <?php if ($cats === []): ?>
         <p class="cp-empty">Каталог наполняется. Напишите нам — подберём деталь по номеру вручную:
             <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>.</p>
     <?php else: ?>
-        <div class="cp-grid cp-grid--cat">
-            <?php foreach ($cats as $c): ?>
+        <?php foreach ([$featuredCats, $moreCats] as $groupIndex => $categoryGroup): ?>
+        <?php if ($categoryGroup === []) { continue; } ?>
+        <?php if ($groupIndex === 1): ?>
+        <details class="cp-catalog-more">
+            <summary class="cp-catalog-more__toggle">
+                <span class="cp-catalog-more__closed">Весь каталог</span>
+                <span class="cp-catalog-more__open">Свернуть каталог</span>
+                <span class="cp-catalog-more__arrow" aria-hidden="true">↓</span>
+            </summary>
+        <?php endif; ?>
+        <div class="cp-grid cp-grid--cat cp-grid--home-cat">
+            <?php foreach ($categoryGroup as $c): ?>
                 <?php $cnt = (int) ($c['products_count'] ?? 0); ?>
                 <a class="cp-cat" href="<?= e(url('/catalog/' . (string) $c['slug'])) ?>">
                     <?php $catGraphic = category_graphic((string) ($c['slug'] ?? ''), (string) ($c['icon'] ?? '')); ?>
@@ -162,6 +179,8 @@ $heroExists = asset_exists($heroImage);
                 </a>
             <?php endforeach; ?>
         </div>
+        <?php if ($groupIndex === 1): ?></details><?php endif; ?>
+        <?php endforeach; ?>
     <?php endif; ?>
 </section>
 
