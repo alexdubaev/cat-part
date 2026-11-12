@@ -21,6 +21,11 @@ async function geometry(page) {
       cards: cards.map(box),
       control: control ? box(control) : null,
       names: cards.map(card => card.querySelector('.cp-cat__name').textContent.trim()),
+      contentsFit: cards.every(card => {
+        const outer = card.getBoundingClientRect();
+        const text = card.querySelector('.cp-cat__txt').getBoundingClientRect();
+        return text.top >= outer.top && text.bottom <= outer.bottom;
+      }),
       overflow: document.documentElement.scrollWidth > innerWidth,
     };
   });
@@ -43,7 +48,8 @@ async function geometry(page) {
       const closed = await geometry(page);
       assert.deepEqual(closed.names, expected, 'Only the six selected categories should be visible, in order');
       const defects = [];
-      if (!closed.cards.every(card => card.height >= 120)) defects.push('category cards are flattened');
+      if (!closed.cards.every(card => card.height >= 110 && card.height <= 120)) defects.push('category cards must retain compact vertical whitespace');
+      if (!closed.contentsFit) defects.push('category text must fit within its card');
       if (!closed.control || closed.control.bottom > closed.cards[0].top) defects.push('catalog control must be above every card');
       assert.equal(defects.length, 0, defects.join('; '));
       if (width === 1920) assert.equal(new Set(closed.cards.map(card => card.top)).size, 1, 'Desktop categories must occupy one row');
@@ -55,6 +61,7 @@ async function geometry(page) {
       assert.equal(await page.getByRole('button', { name: 'Свернуть каталог', exact: true }).getAttribute('aria-expanded'), 'true', 'Expanded state must be exposed to assistive technology');
       const opened = await geometry(page);
       assert.equal(opened.cards.length, 18, 'Expanding must expose all 18 categories');
+      assert.equal(opened.contentsFit, true, 'Long category names must fit without vertical clipping');
       assert.equal(opened.overflow, false, 'Expanded catalog must not overflow horizontally');
       assert.ok(Math.max(...opened.cards.map(card => card.height)) - Math.min(...opened.cards.map(card => card.height)) <= 1, 'All expanded cards must have equal height');
       assert.ok(Math.abs(opened.cards[0].height - closed.cards[0].height) <= 1, 'Expanding must preserve the first row card height');
