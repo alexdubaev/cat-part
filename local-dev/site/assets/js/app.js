@@ -9,6 +9,9 @@
 (function () {
   'use strict';
 
+  var catalogPanel = document.querySelector('.cp-catalog-panel');
+  if (catalogPanel && window.matchMedia('(max-width: 800px)').matches) catalogPanel.open = false;
+
   /* ── Бургер: раскрытие строки меню на мобиле ───────────────────────────── */
 
   var burger = document.getElementById('cpBurger');
