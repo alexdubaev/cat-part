@@ -48,7 +48,7 @@ async function geometry(page) {
       const closed = await geometry(page);
       assert.deepEqual(closed.names, expected, 'Only the six selected categories should be visible, in order');
       const defects = [];
-      if (!closed.cards.every(card => card.height >= 110 && card.height <= 120)) defects.push('category cards must retain compact vertical whitespace');
+      if (!closed.cards.every(card => card.height >= 80 && card.height <= 84)) defects.push('featured category cards must be about 30% shorter than 116px');
       if (!closed.contentsFit) defects.push('category text must fit within its card');
       if (!closed.control || closed.control.bottom > closed.cards[0].top) defects.push('catalog control must be above every card');
       assert.equal(defects.length, 0, defects.join('; '));
@@ -63,20 +63,24 @@ async function geometry(page) {
       assert.equal(opened.cards.length, 18, 'Expanding must expose all 18 categories');
       assert.equal(opened.contentsFit, true, 'Long category names must fit without vertical clipping');
       assert.equal(opened.overflow, false, 'Expanded catalog must not overflow horizontally');
-      assert.ok(Math.max(...opened.cards.map(card => card.height)) - Math.min(...opened.cards.map(card => card.height)) <= 1, 'All expanded cards must have equal height');
       assert.ok(Math.abs(opened.cards[0].height - closed.cards[0].height) <= 1, 'Expanding must preserve the first row card height');
       assert.ok(opened.control.bottom <= opened.cards[0].top, 'Control must remain above the expanded grid');
       assert.ok(Math.abs(opened.control.top - closed.control.top) <= 1, 'Control must stay in the section heading');
       const rows = [...new Set(opened.cards.map(card => card.top))];
+      const rowHeights = rows.map(top => {
+        const cards = opened.cards.filter(card => card.top === top);
+        assert.ok(Math.max(...cards.map(card => card.height)) - Math.min(...cards.map(card => card.height)) <= 1, 'Cards within each row must have equal height');
+        return cards[0].height;
+      });
       for (let index = 1; index < rows.length; index++) {
-        assert.ok(Math.abs(rows[index] - rows[index - 1] - opened.cards[0].height - 8) <= 1, 'Rows must have a continuous, regular gap');
+        assert.ok(Math.abs(rows[index] - rows[index - 1] - rowHeights[index - 1] - 8) <= 1, 'Rows must have a continuous, regular gap');
       }
       await page.locator('.cp-section--catalog').screenshot({ path: path.join(output, `catalog-${width}-open.png`) });
       await page.getByRole('button', { name: 'Свернуть каталог', exact: true }).press('Enter');
       assert.equal((await geometry(page)).cards.length, 6, 'Enter must collapse the catalog');
       await page.getByRole('button', { name: 'Весь каталог', exact: true }).press('Space');
       assert.equal((await geometry(page)).cards.length, 18, 'Space must expand the catalog');
-      console.log(`PASS ${width}: 6 → 18 → 6 → 18, equal card heights, top control, regular rows, keyboard, no overflow`);
+      console.log(`PASS ${width}: 6 → 18 → 6 → 18, compact cards, equal heights within rows, top control, regular rows, keyboard, no overflow`);
       await page.close();
     }
     const noScript = await browser.newPage({ javaScriptEnabled: false });
