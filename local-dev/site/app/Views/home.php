@@ -180,6 +180,48 @@ $heroExists = asset_exists($heroImage);
     <?php endif; ?>
 </section>
 
+<?php $homeProducts = isset($homeProducts) && is_array($homeProducts) ? $homeProducts : []; ?>
+<?php if ($homeProducts !== []): ?>
+<section class="cp-wrap cp-section cp-section--tight" id="homeProducts">
+    <div class="cp-section__head">
+        <h2>Товары</h2>
+        <a class="cp-section__more" href="<?= e(url('/catalog')) ?>">Весь каталог →</a>
+    </div>
+    <div class="cp-grid cp-grid--prod">
+        <?php foreach ($homeProducts as $p): ?>
+            <?php
+            $href = url('/tovar/' . (string) $p['slug']);
+            $sku = trim((string) ($p['sku'] ?? ''));
+            $img = product_image_url((string) ($p['image_url'] ?? ''));
+            $price = (float) ($p['price'] ?? 0);
+            ?>
+            <article class="cp-prod">
+                <a class="cp-prod__img" href="<?= e($href) ?>" tabindex="-1" aria-hidden="true">
+                    <?php if ($img !== ''): ?>
+                        <img src="<?= e($img) ?>" alt="" loading="lazy" decoding="async" width="240" height="180">
+                    <?php else: ?>
+                        <svg class="cp-prod__ph" aria-hidden="true"><use href="#cp-i-part"></use></svg>
+                    <?php endif; ?>
+                </a>
+                <div class="cp-prod__body">
+                    <?php if ($sku !== ''): ?><span class="cp-prod__sku"><?= e($sku) ?></span><?php endif; ?>
+                    <a class="cp-prod__name" href="<?= e($href) ?>"><?= e($p['name']) ?></a>
+                    <span class="cp-prod__stock cp-prod__stock--<?= !empty($p['in_stock']) ? 'in' : 'out' ?>"><?= !empty($p['in_stock']) ? 'В наличии' : 'Под заказ' ?></span>
+                    <div class="cp-prod__foot">
+                        <span class="cp-prod__price<?= $price > 0 ? '' : ' cp-prod__price--ask' ?>"><?= e(money($p['price'] ?? null)) ?></span>
+                        <form method="post" action="<?= e(url('/korzina/add')) ?>">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="product_id" value="<?= e((string) $p['id']) ?>">
+                            <button class="cp-btn cp-btn--light cp-btn--sm" type="submit">В корзину</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
+
 <?php
 /*
  * ── О компании ───────────────────────────────────────────────────────────────

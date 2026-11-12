@@ -300,6 +300,25 @@ final class Product
         return (int) ($row['c'] ?? 0);
     }
 
+    /** Небольшая витрина реальных активных товаров на главной. */
+    public static function forHome(int $limit = 5): array
+    {
+        $limit = max(1, min(10, $limit));
+        return App::db()->fetchAll(
+            'SELECT ' . self::LIST_COLUMNS . '
+               FROM products p
+              WHERE p.is_active = 1
+                AND p.id IN (
+                    SELECT MAX(q.id) FROM products q
+                     WHERE q.is_active = 1 AND q.category_id IS NOT NULL
+                     GROUP BY q.category_id
+                )
+              ORDER BY p.in_stock DESC, p.id DESC
+              LIMIT :lim',
+            ['lim' => $limit]
+        );
+    }
+
     /**
      * Порция товаров для чанка sitemap. ORDER BY id — чтобы разбивка на файлы была
      * стабильной между запросами и товар не пропал/не задвоился между чанками.
