@@ -11,40 +11,10 @@ use App\Models\Product;
 
 final class CatalogController extends Controller
 {
-    /** Хаб «Каталог»: корневые разделы, у каждого — свои подразделы. */
+    /** Товары с деревом категорий и фильтрами. */
     public function index(): void
     {
-        $roots = Category::roots();
-
-        // Дети всех корней — ОДИН запрос вместо цикла с запросом внутри (N+1).
-        // На 15 корнях наивный путь стоил бы 15 запросов на отрисовку одной страницы.
-        $rootIds = array_map(static fn (array $c): int => (int) $c['id'], $roots);
-        $children = Category::childrenOfMany($rootIds);
-
-        // Раскладываем детей по родителям в памяти: сортировка уже сделана SQL,
-        // порядок внутри группы сохраняется.
-        $byParent = [];
-        foreach ($children as $child) {
-            $byParent[(int) $child['parent_id']][] = $child;
-        }
-        foreach ($roots as $i => $root) {
-            $roots[$i]['children'] = $byParent[(int) $root['id']] ?? [];
-        }
-
-        $this->view('catalog/index', [
-            'page' => [
-                'title'       => 'Каталог запчастей для техники Caterpillar | ' . App::config('site.name'),
-                'description' => 'Каталог запчастей Caterpillar по разделам: гидравлика, двигатель, силовая '
-                    . 'передача, ходовая часть, кабины, фильтры и жидкости, навесное оборудование, электрика. '
-                    . 'Подбор по артикулу.',
-                'canonical'   => '/catalog',
-                'breadcrumb'  => [
-                    // Последний элемент — без url: это текущая страница, ссылка на саму себя не нужна.
-                    ['name' => 'Каталог'],
-                ],
-            ],
-            'categories' => $roots,
-        ]);
+        $this->listing(null);
     }
 
     /**
@@ -126,95 +96,52 @@ final class CatalogController extends Controller
     public function category(string $slug): void
     {
         $category = Category::findBySlug($slug);
-        if ($category === null) {
-            $this->notFound();
-        }
+        if ($category === null) $this->notFound();
+        $this->listing($category);
+    }
 
-        $perPage = max(1, (int) App::config('catalog.per_page', 24));
+    private function listing(?array $category): void
+    {
+        $get = static fn (string $key, string $default = ''): string => isset($_GET[$key]) && is_string($_GET[$key]) ? trim($_GET[$key]) : $default;
+        $stock = $get('stock');
+        if (!in_array($stock, ['in', 'order'], true)) $stock = '';
+        $query = mb_substr($get('q'), 0, 120);
+        $sort = $get('sort', 'default');
+        if (!in_array($sort, ['default', 'name', 'sku', 'price', 'price_desc'], true)) $sort = 'default';
+        $pageNum = max(1, (int) $get('page', '1'));
         $maxPage = max(1, (int) App::config('catalog.max_page', 200));
-        $pageNum = max(1, (int) ($_GET['page'] ?? 1));
-
-        // Потолок глубины листания: LIMIT 24 OFFSET 19800 заставляет MySQL прочитать и
-        // выбросить 19 800 строк. Живой человек туда не ходит — ходит бот, и выедает ресурс.
-        // Отдаём 404, а не молчаливый клип до последней страницы: несуществующая страница
-        // и должна отвечать 404, иначе робот будет ходить по ней вечно.
-        if ($pageNum > $maxPage) {
-            $this->notFound();
-        }
-
-        /**
-         * 🔥 Никакого COUNT(*). Итог берём из готового счётчика categories.products_count,
-         * который пересчитывает импортёр (он считает товары ВКЛЮЧАЯ потомков — как и rollup ниже).
-         *
-         * У донора Product::countByCategory() выполнял COUNT(*) на КАЖДЫЙ показ категории:
-         * на разделе в 20 000 строк это полный скан индекса ради одного числа, которое
-         * меняется раз в импорт.
-         */
-        $total = (int) ($category['products_count'] ?? 0);
-
-        $children = Category::childrenOf((int) $category['id']);
-
-        // Товары раздела и всей его ветки — см. комментарий к Product::bySubtree().
-        $products = Product::bySubtree(
-            Category::subtreePrefix($category),
-            $perPage,
-            ($pageNum - 1) * $perPage
-        );
-
-        // Счётчик — источник правды для пагинации, но если импортёр его не пересчитал,
-        // а товары уже есть, мы всё равно покажем первую страницу, а не пустоту.
-        $pages = (int) ceil($total / $perPage);
-        if ($pages < 1 && $products !== []) {
-            $pages = 1;
-        }
-        if ($pageNum > 1 && $products === []) {
-            $this->notFound();
-        }
-
-        $h1 = (string) ($category['seo_h1'] ?: $category['name']);
-        $baseUrl = '/catalog/' . (string) $category['slug'];
-
-        // Крошки: Каталог → …предки… → текущая. trail() — один запрос на всю цепочку.
-        $crumbs = [['name' => 'Каталог', 'url' => '/catalog']];
-        $trail = Category::trail($category);
-        $lastIndex = count($trail) - 1;
-        foreach ($trail as $i => $node) {
-            $crumb = ['name' => $node['name']];
-            // У последней крошки url нет — она и есть текущая страница.
-            if ($i !== $lastIndex) {
-                $crumb['url'] = '/catalog/' . $node['slug'];
-            }
-            $crumbs[] = $crumb;
-        }
-
-        $this->view('catalog/category', [
+        $perPage = max(1, min(60, (int) App::config('catalog.per_page', 24)));
+        if ($pageNum > $maxPage) $this->notFound();
+        $result = Product::catalogListing($category !== null ? Category::subtreePrefix($category) : null, $stock, $query, $sort, $perPage, ($pageNum - 1) * $perPage);
+        $pages = max(1, min($maxPage, (int) ceil($result['total'] / $perPage)));
+        if ($pageNum > $pages) $this->notFound();
+        $route = $category !== null ? '/catalog/' . $category['slug'] : '/catalog';
+        $filters = array_filter(['stock' => $stock, 'q' => $query, 'sort' => $sort === 'default' ? '' : $sort], static fn ($v) => $v !== '');
+        $suffix = $filters ? '?' . http_build_query($filters) : '';
+        $h1 = $category !== null ? (string) (($category['seo_h1'] ?? '') ?: $category['name']) : 'Каталог запчастей Caterpillar';
+        $trail = $category !== null ? Category::trail($category) : [];
+        $crumbs = $category !== null ? [['name' => 'Каталог', 'url' => '/catalog']] : [];
+        foreach ($trail as $node) $crumbs[] = ['name' => $node['name'], 'url' => '/catalog/' . $node['slug']];
+        if ($crumbs !== []) unset($crumbs[count($crumbs) - 1]['url']);
+        else $crumbs = [['name' => 'Каталог']];
+        if ($filters) header('X-Robots-Tag: noindex, follow');
+        $this->view('catalog/listing', [
             'page' => [
-                'title'       => (string) ($category['seo_title'] ?: $h1 . ' для техники Caterpillar | ' . App::config('site.name')),
-                'description' => (string) ($category['seo_description'] ?: $h1
-                    . ' для техники Caterpillar. Подбор по номеру детали, поставка по России.'),
-                'keywords'    => (string) ($category['seo_keywords'] ?? ''),
-                // Страницы листания канонизируем на самих себя, а не на первую: иначе
-                // товары со 2-й и дальше страниц выпадают из индекса вместе с ней.
-                'canonical'   => page_url($baseUrl, $pageNum),
-                'breadcrumb'  => $crumbs,
-                'jsonld'      => [
-                    [
-                        '@context'    => 'https://schema.org',
-                        '@type'       => 'CollectionPage',
-                        'name'        => $h1,
-                        'url'         => url(page_url($baseUrl, $pageNum)),
-                        'isPartOf'    => ['@type' => 'WebSite', 'url' => rtrim((string) App::config('app.base_url'), '/') . '/'],
-                    ],
-                ],
+                'title' => $category !== null ? (string) (($category['seo_title'] ?? '') ?: $h1 . ' | CatPart') : $h1 . ' | CatPart',
+                'description' => (string) (($category['seo_description'] ?? '') ?: $h1 . '. Подбор по номеру детали, поставка по России.'),
+                'keywords' => (string) ($category['seo_keywords'] ?? ''),
+                'canonical' => page_url($route, $pageNum), 'breadcrumb' => $crumbs,
+                'jsonld' => [[
+                    '@context' => 'https://schema.org', '@type' => 'CollectionPage',
+                    'name' => $h1, 'url' => url(page_url($route, $pageNum)),
+                    'isPartOf' => ['@type' => 'WebSite', 'url' => rtrim((string) App::config('app.base_url'), '/') . '/'],
+                ]],
             ],
-            'category' => $category,
-            'h1'       => $h1,
-            'children' => $children,
-            'products' => $products,
-            'total'    => $total,
-            'pageNum'  => $pageNum,
-            'pages'    => $pages,
-            'baseUrl'  => $baseUrl,
+            'category' => $category, 'navigation' => Category::navigation(),
+            'activeIds' => array_column($trail, 'id'), 'h1' => $h1,
+            'products' => $result['products'], 'total' => $result['total'],
+            'pageNum' => $pageNum, 'pages' => $pages, 'baseUrl' => $route . $suffix,
+            'route' => $route, 'suffix' => $suffix, 'stock' => $stock, 'query' => $query, 'sort' => $sort,
         ]);
     }
 }

@@ -300,6 +300,41 @@ final class Product
         return (int) ($row['c'] ?? 0);
     }
 
+    /** Filtered catalog; all user values are bound and sort expressions are allowlisted. */
+    public static function catalogListing(?string $prefix, string $stock, string $query, string $sort, int $limit, int $offset): array
+    {
+        $where = ['p.is_active = 1'];
+        $params = [];
+        $join = '';
+        if ($prefix !== null) {
+            $join = ' JOIN categories c ON c.id = p.category_id';
+            $where[] = 'c.is_active = 1 AND c.path LIKE :prefix';
+            $params['prefix'] = $prefix;
+        }
+        if (in_array($stock, ['in', 'order'], true)) {
+            $where[] = 'p.in_stock = :stock';
+            $params['stock'] = $stock === 'in' ? 1 : 0;
+        }
+        if ($query !== '') {
+            $where[] = "(p.sku_norm = :sku OR p.name LIKE :name ESCAPE '!')";
+            $params['sku'] = sku_norm($query);
+            $params['name'] = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+        }
+        $orders = [
+            'default' => 'p.in_stock DESC, p.id DESC',
+            'name' => 'p.name, p.id',
+            'sku' => 'p.sku_norm, p.id',
+            'price' => '(p.price IS NULL OR p.price <= 0), p.price, p.id',
+            'price_desc' => '(p.price IS NULL OR p.price <= 0), p.price DESC, p.id',
+        ];
+        $from = ' FROM products p' . $join . ' WHERE ' . implode(' AND ', $where);
+        $total = (int) (App::db()->fetch('SELECT COUNT(*) AS n' . $from, $params)['n'] ?? 0);
+        $rows = App::db()->fetchAll('SELECT ' . self::LIST_COLUMNS . $from
+            . ' ORDER BY ' . ($orders[$sort] ?? $orders['default']) . ' LIMIT :lim OFFSET :off',
+            $params + ['lim' => max(1, min(60, $limit)), 'off' => max(0, $offset)]);
+        return ['products' => $rows, 'total' => $total];
+    }
+
     /** Небольшая витрина реальных активных товаров на главной. */
     public static function forHome(int $limit = 5): array
     {

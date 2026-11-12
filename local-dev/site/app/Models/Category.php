@@ -35,6 +35,11 @@ final class Category
         );
     }
 
+    public static function navigation(): array
+    {
+        return App::db()->fetchAll('SELECT id, parent_id, slug, name, path FROM categories WHERE is_active = 1 ORDER BY sort, name');
+    }
+
     /** @return list<array<string,mixed>> Прямые потомки категории. */
     public static function childrenOf(int $parentId): array
     {
