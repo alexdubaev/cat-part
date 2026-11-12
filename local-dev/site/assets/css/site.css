@@ -611,33 +611,28 @@ h1, h2, h3 { line-height: 1.18; letter-spacing: -.015em; margin: 0; }
 
 .cp-grid { display: grid; gap: 14px; }
 .cp-grid--cat { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
-.cp-grid--home-cat { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-.cp-catalog-more { margin-top: 14px; }
-.cp-catalog-more__toggle {
+.cp-grid--home-cat { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+.cp-grid--home-cat > .cp-cat { min-height: 144px; padding: 12px 10px; }
+.cp-grid--home-cat > [hidden], .cp-catalog-toggle[hidden] { display: none; }
+.cp-catalog-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   width: fit-content;
-  margin-left: auto;
+  min-width: 184px;
   padding: 10px 16px;
   border: 1px solid var(--cp-line);
   border-radius: var(--cp-r);
   background: var(--cp-card);
   color: var(--cp-ink);
+  font: inherit;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  list-style: none;
 }
-.cp-catalog-more__toggle::-webkit-details-marker { display: none; }
-.cp-catalog-more__toggle:hover { border-color: var(--cp-orange); }
-.cp-catalog-more__toggle:focus-visible { outline: 2px solid var(--cp-orange-dk); outline-offset: 3px; }
-.cp-catalog-more__open { display: none; }
-.cp-catalog-more[open] .cp-catalog-more__closed { display: none; }
-.cp-catalog-more[open] .cp-catalog-more__open { display: inline; }
-.cp-catalog-more[open] .cp-catalog-more__arrow { transform: rotate(180deg); }
-.cp-catalog-more[open] > .cp-grid { margin-top: 14px; }
+.cp-catalog-toggle:hover { border-color: var(--cp-orange); text-decoration: none; }
+.cp-catalog-toggle:focus-visible { outline: 2px solid var(--cp-orange-dk); outline-offset: 3px; }
 .cp-grid--prod { grid-template-columns: repeat(auto-fill, minmax(224px, 1fr)); }
 
 .cp-cat {
@@ -1670,6 +1665,7 @@ a.cp-chip:hover { border-color: var(--cp-orange); color: var(--cp-orange-dk); te
   .cp-grid--prod { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .cp-grid--cat { grid-template-columns: 1fr; }
   .cp-grid--home-cat { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cp-section--catalog .cp-catalog-toggle, .cp-section--catalog noscript { width: 100%; }
   /* Карточка товара — в одну колонку: фото сверху, покупка и характеристики под ним. */
   .cp-pcard { grid-template-columns: 1fr; gap: 20px; }
   .cp-pcard__h1 { font-size: 23px; }
