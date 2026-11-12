@@ -23,7 +23,16 @@ function url(string $path = '/'): string
 /** Путь к ассету (под docroot=/public ассеты лежат в /assets). */
 function asset(string $path): string
 {
-    return '/assets/' . ltrim($path, '/');
+    $url = '/assets/' . ltrim($path, '/');
+    // Перезапрашиваем изменённые CSS/JS, сохраняя долгий кеш остальных ресурсов.
+    if (in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['css', 'js'], true)) {
+        $docRoot = rtrim((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''), "/\\");
+        $file = $docRoot . $url;
+        if ($docRoot !== '' && is_file($file)) {
+            $url .= '?v=' . (string) filemtime($file);
+        }
+    }
+    return $url;
 }
 
 /**
