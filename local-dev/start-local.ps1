@@ -81,7 +81,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Could not create or access local_catpart; refu
     if (!(Test-Path $dump)) { throw "Database dump not found: $dump" }
     $dumpHash = (Get-FileHash -LiteralPath $dump -Algorithm SHA256).Hash
     if ([int]$count -eq 0) {
-        cmd /c "\"$client\" --protocol=tcp --host=127.0.0.1 --port=3307 -uroot local_catpart < \"$dump\"" | Out-Host
+        $importCommand = '""{0}" --protocol=tcp --host=127.0.0.1 --port=3307 -uroot local_catpart < "{1}""' -f $client, $dump
+        cmd /d /s /c $importCommand | Out-Host
         if ($LASTEXITCODE -ne 0) { throw 'Database import failed; inspect the MariaDB output before retrying.' }
         Set-Content -LiteralPath $importMarker -Value $dumpHash -NoNewline
     } else {
