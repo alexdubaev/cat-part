@@ -8,6 +8,7 @@ use App\Core\App;
 use App\Core\Controller;
 use App\Models\Category;
 use App\Models\Post;
+use App\Models\Product;
 
 final class HomeController extends Controller
 {
@@ -45,6 +46,7 @@ final class HomeController extends Controller
                 ],
             ],
             'rootCategories' => Category::roots(),
+            'homeProducts' => Product::forHome(),
 
             // Все опубликованные стартовые статьи для блока на главной. Ключи строк —
             // slug, title, excerpt, image_url, published_at (см. Post::latest()).

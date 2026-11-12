@@ -81,6 +81,15 @@ async function geometry(page) {
       await page.getByRole('button', { name: 'Весь каталог', exact: true }).press('Space');
       assert.equal((await geometry(page)).cards.length, 18, 'Space must expand the catalog');
       console.log(`PASS ${width}: 6 → 18 → 6 → 18, compact cards, equal heights within rows, top control, regular rows, keyboard, no overflow`);
+      const homeProducts = page.locator('#homeProducts');
+      assert.equal(await homeProducts.locator('.cp-prod').count(), 5, 'Homepage must show five real products');
+      assert.ok(await homeProducts.evaluate(el => el.compareDocumentPosition(document.querySelector('.cp-section--catalog')) & Node.DOCUMENT_POSITION_PRECEDING), 'Products must follow the catalog');
+      await homeProducts.scrollIntoViewIfNeeded();
+      await homeProducts.screenshot({ path: path.join(output, `home-products-${width}.png`) });
+      await homeProducts.locator('.cp-prod').first().getByRole('button', { name: 'В корзину' }).click();
+      assert.equal(new URL(page.url()).pathname, '/korzina', 'Homepage product must open the cart');
+      assert.ok(await page.getByText('Позиция добавлена в корзину.', { exact: false }).count(), 'Homepage product must be added to the cart');
+      console.log(`PASS ${width}: homepage products and add-to-cart`);
       await page.close();
     }
     const noScript = await browser.newPage({ javaScriptEnabled: false });
