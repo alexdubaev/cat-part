@@ -142,26 +142,24 @@ $heroExists = asset_exists($heroImage);
 <section class="cp-wrap cp-section cp-section--catalog">
     <div class="cp-section__head">
         <h2>Разделы каталога</h2>
+        <?php if ($moreCats !== []): ?>
+            <button class="cp-catalog-toggle" id="cpCatalogToggle" type="button"
+                    aria-expanded="false" aria-controls="cpHomeCatalog" hidden>
+                <span data-catalog-label>Весь каталог</span>
+                <span data-catalog-arrow aria-hidden="true">↓</span>
+            </button>
+            <noscript><a class="cp-catalog-toggle" href="<?= e(url('/catalog')) ?>">Весь каталог</a></noscript>
+        <?php endif; ?>
     </div>
 
     <?php if ($cats === []): ?>
         <p class="cp-empty">Каталог наполняется. Напишите нам — подберём деталь по номеру вручную:
             <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>.</p>
     <?php else: ?>
-        <?php foreach ([$featuredCats, $moreCats] as $groupIndex => $categoryGroup): ?>
-        <?php if ($categoryGroup === []) { continue; } ?>
-        <?php if ($groupIndex === 1): ?>
-        <details class="cp-catalog-more">
-            <summary class="cp-catalog-more__toggle">
-                <span class="cp-catalog-more__closed">Весь каталог</span>
-                <span class="cp-catalog-more__open">Свернуть каталог</span>
-                <span class="cp-catalog-more__arrow" aria-hidden="true">↓</span>
-            </summary>
-        <?php endif; ?>
-        <div class="cp-grid cp-grid--cat cp-grid--home-cat">
-            <?php foreach ($categoryGroup as $c): ?>
+        <div class="cp-grid cp-grid--cat cp-grid--home-cat" id="cpHomeCatalog">
+            <?php foreach (array_merge($featuredCats, $moreCats) as $index => $c): ?>
                 <?php $cnt = (int) ($c['products_count'] ?? 0); ?>
-                <a class="cp-cat" href="<?= e(url('/catalog/' . (string) $c['slug'])) ?>">
+                <a class="cp-cat" href="<?= e(url('/catalog/' . (string) $c['slug'])) ?>"<?= $index >= count($featuredCats) ? ' data-catalog-extra hidden' : '' ?>>
                     <?php $catGraphic = category_graphic((string) ($c['slug'] ?? ''), (string) ($c['icon'] ?? '')); ?>
                     <?php if (asset_exists($catGraphic)): ?>
                         <img class="cp-cat__ic" src="<?= e(asset($catGraphic)) ?>" alt="" loading="lazy" decoding="async" width="72" height="72">
@@ -179,8 +177,6 @@ $heroExists = asset_exists($heroImage);
                 </a>
             <?php endforeach; ?>
         </div>
-        <?php if ($groupIndex === 1): ?></details><?php endif; ?>
-        <?php endforeach; ?>
     <?php endif; ?>
 </section>
 

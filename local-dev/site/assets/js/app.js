@@ -51,6 +51,20 @@
 
   /* ── Каталог: «Раскрыть» список подразделов в плитке раздела ───────────── */
 
+  var catalogToggle = document.getElementById('cpCatalogToggle');
+  var homeCatalog = document.getElementById('cpHomeCatalog');
+  if (catalogToggle && homeCatalog) {
+    var extraCategories = homeCatalog.querySelectorAll('[data-catalog-extra]');
+    catalogToggle.hidden = false;
+    catalogToggle.addEventListener('click', function () {
+      var expanded = catalogToggle.getAttribute('aria-expanded') !== 'true';
+      Array.prototype.forEach.call(extraCategories, function (card) { card.hidden = !expanded; });
+      catalogToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      catalogToggle.querySelector('[data-catalog-label]').textContent = expanded ? 'Свернуть каталог' : 'Весь каталог';
+      catalogToggle.querySelector('[data-catalog-arrow]').textContent = expanded ? '↑' : '↓';
+    });
+  }
+
   // Плитка показывает первые 10 подразделов, остальные скрыты CSS
   // (.cp-group__li--extra). Раскрытие идёт прямо в плитке, без перехода:
   // человек сравнивает разделы на одной странице, и уводить его со страницы,
