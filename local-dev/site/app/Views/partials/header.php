@@ -78,6 +78,7 @@ $q = isset($_GET['q']) && is_string($_GET['q']) ? $_GET['q'] : '';
     <div class="cp-hd__bar" id="cpNavBar">
         <nav class="cp-wrap cp-nav" aria-label="Главное меню">
             <a class="cp-nav__lnk cp-nav__lnk--accent" href="<?= e(url('/catalog')) ?>">Каталог</a>
+            <a class="cp-nav__lnk" href="<?= e(url('/o-kompanii')) ?>">О компании</a>
             <a class="cp-nav__lnk" href="<?= e(url('/dostavka')) ?>">Доставка</a>
             <a class="cp-nav__lnk" href="<?= e(url('/oplata')) ?>">Оплата</a>
             <a class="cp-nav__lnk" href="<?= e(url('/garantiya')) ?>">Гарантия</a>
