@@ -37,7 +37,7 @@
                         <div class="cp-prod__foot">
                             <?php /* money() сам отдаёт «по запросу» при NULL/0 — но стиль
                                      у цены и у запроса разный, отсюда отдельный класс. */ ?>
-                            <span class="cp-prod__price<?= $price > 0 ? '' : ' cp-prod__price--ask' ?>"><?= e(money($p['price'] ?? null)) ?></span>
+                            <span class="cp-prod__price<?= $price > 0 ? '' : ' cp-prod__price--ask' ?>"><?= e(money($p['price'] ?? null, (string) ($p['currency'] ?? 'RUB'))) ?></span>
                             <form method="post" action="<?= e(url('/korzina/add')) ?>">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="product_id" value="<?= e((string) $p['id']) ?>">

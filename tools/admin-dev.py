@@ -50,6 +50,8 @@ def setup(args):
     ini=original_ini.read_text(encoding='utf-8') if original_ini.is_file() else ''
     ini+='\nextension_dir='+str(php.parent/'ext').replace('\\','/')+'\nextension=gd\nextension=mysqli\n'
     ini+='\ndisplay_errors=Off\nlog_errors=On\nerror_log='+str(private/'php-errors.log').replace('\\','/')+'\n'
+    # Isolated importer: bounded streaming files, never change the shared PHP ini.
+    ini+='\nupload_max_filesize=16M\npost_max_size=20M\n'
     (RUNTIME/'php.ini').write_text(ini,encoding='utf-8')
     account_file=private/'accounts.json'
     if account_file.is_file():accounts=json.loads(account_file.read_text(encoding='utf-8'))

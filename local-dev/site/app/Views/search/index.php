@@ -77,7 +77,7 @@ declare(strict_types=1);
                 <div class="cp-card__sku"><?= e($product['sku']) ?></div>
               <?php endif; ?>
               <h2 class="cp-card__name"><a href="<?= e($href) ?>"><?= e($product['name']) ?></a></h2>
-              <div class="cp-card__price"><?= e(money($product['price'] ?? null)) ?></div>
+              <div class="cp-card__price"><?= e(money($product['price'] ?? null, (string) ($product['currency'] ?? 'RUB'))) ?></div>
               <div class="cp-card__stock<?= !empty($product['in_stock']) ? ' cp-card__stock--in' : '' ?>">
                 <?= !empty($product['in_stock']) ? 'В наличии' : 'Под заказ' ?>
               </div>
