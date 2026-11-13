@@ -2,7 +2,7 @@
 
 **Требования:** R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060, R061, R062, R063, R064, R065, R066, R067, R068
 **Зависит от:** 01
-**Зона:** `opencart/extension/catpart/system/Catalog.php` · `opencart/extension/catpart/system/CatalogImport.php` · `opencart/extension/catpart/admin/controller/module/catalog.php` · `opencart/extension/catpart/admin/controller/module/imports.php` · `tests/admin-catalog.php` · `local-dev/site/app/Models/Product.php` · `local-dev/site/app/Models/Category.php` · `local-dev/site/app/Views/product`
+**Зона:** `opencart/extension/catpart/system/Catalog.php` · `opencart/extension/catpart/system/CatalogImport.php` · `opencart/extension/catpart/admin/controller/module/catalog.php` · `opencart/extension/catpart/admin/controller/module/imports.php` · `tests/admin-catalog.php` · `local-dev/site/app/Models/Product.php` · `local-dev/site/app/Models/Category.php` · `local-dev/site/app/Views/catalog/product.php`
 **Волна:** 2
 **Ревью:** нет — один итоговый независимый review по owner policy
 **Модель:** сильная
@@ -30,3 +30,5 @@
 - [ ] >100 строк
 - [ ] новые slug direct301
 - [ ] real DB tests.
+
+Уточнение зоны02 по реальному коду: Views/catalog/product.php и узко Controllers/CatalogController.php для передачи product/category metadata в общий layout. Общий layout/sitemap/redirect reader остаются у03.

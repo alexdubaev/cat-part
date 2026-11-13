@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "C:/Users/Alexandr/.codex/skills/autopilot",
   "baseCommit": "3f2f046",
   "startedAt": "2026-11-13T11:50:10+03:00",
-  "updatedAt": "2026-11-13T12:18:46+03:00",
+  "updatedAt": "2026-11-13T12:50:12+03:00",
   "finishedAt": null,
   "stages": [
     {
@@ -63,11 +63,11 @@ window.STATE =
   "requirements": {
     "total": 234,
     "done": 0,
-    "inTicket": 234,
+    "inTicket": 231,
     "inSpec": 0,
     "placeholder": 0,
-    "deferred": 0,
-    "dropped": 0
+    "deferred": 2,
+    "dropped": 1
   },
   "tickets": [
     {
@@ -81,7 +81,6 @@ window.STATE =
         "R005",
         "R006",
         "R007",
-        "R008",
         "R009",
         "R010",
         "R011",
@@ -107,7 +106,6 @@ window.STATE =
         "R180",
         "R181",
         "R182",
-        "R183",
         "R184",
         "R185",
         "R186",
@@ -131,10 +129,16 @@ window.STATE =
       ],
       "review": "нет — один итоговый независимый review по owner policy",
       "model": "сильная",
-      "status": "in-progress",
+      "status": "done",
       "startedAt": "2026-11-13T12:06:25+03:00",
+      "finishedAt": "2026-11-13T12:19:55+03:00",
       "retries": 0,
-      "repairs": 0
+      "repairs": 0,
+      "tests": {
+        "passed": 34,
+        "failed": 0
+      },
+      "commit": "002bb72"
     },
     {
       "id": "02",
@@ -180,11 +184,12 @@ window.STATE =
         "tests/admin-catalog.php",
         "local-dev/site/app/Models/Product.php",
         "local-dev/site/app/Models/Category.php",
-        "local-dev/site/app/Views/product"
+        "local-dev/site/app/Views/catalog/product.php"
       ],
       "review": "нет — один итоговый независимый review по owner policy",
       "model": "сильная",
-      "status": "pending",
+      "status": "in-progress",
+      "startedAt": "2026-11-13T12:19:56+03:00",
       "retries": 0,
       "repairs": 0
     },
@@ -295,7 +300,8 @@ window.STATE =
       ],
       "review": "нет — один итоговый независимый review по owner policy",
       "model": "сильная",
-      "status": "pending",
+      "status": "in-progress",
+      "startedAt": "2026-11-13T12:19:56+03:00",
       "retries": 0,
       "repairs": 0
     },
@@ -352,7 +358,6 @@ window.STATE =
         "R134",
         "R135",
         "R136",
-        "R137",
         "R138"
       ],
       "blockedBy": [
@@ -377,7 +382,8 @@ window.STATE =
       ],
       "review": "нет — один итоговый независимый review по owner policy",
       "model": "сильная",
-      "status": "pending",
+      "status": "in-progress",
+      "startedAt": "2026-11-13T12:19:56+03:00",
       "retries": 0,
       "repairs": 0
     },
@@ -392,7 +398,6 @@ window.STATE =
         "R005",
         "R006",
         "R007",
-        "R008",
         "R009",
         "R010",
         "R011",
@@ -521,7 +526,6 @@ window.STATE =
         "R134",
         "R135",
         "R136",
-        "R137",
         "R138",
         "R139",
         "R140",
@@ -567,7 +571,6 @@ window.STATE =
         "R180",
         "R181",
         "R182",
-        "R183",
         "R184",
         "R185",
         "R186",
@@ -641,7 +644,10 @@ window.STATE =
       "repairs": 0
     }
   ],
-  "tests": null,
+  "tests": {
+    "passed": 34,
+    "failed": 0
+  },
   "debt": {
     "placeholders": [],
     "assumptions": [],
@@ -674,9 +680,21 @@ window.STATE =
     "2026-11-13T12:06:24+03:00",
     "2026-11-13T12:06:25+03:00",
     "2026-11-13T12:18:45+03:00",
-    "2026-11-13T12:18:46+03:00"
+    "2026-11-13T12:18:46+03:00",
+    "2026-11-13T12:19:55+03:00",
+    "2026-11-13T12:19:56+03:00",
+    "2026-11-13T12:21:42+03:00",
+    "2026-11-13T12:21:43+03:00",
+    "2026-11-13T12:33:09+03:00",
+    "2026-11-13T12:33:10+03:00",
+    "2026-11-13T12:34:48+03:00",
+    "2026-11-13T12:34:49+03:00",
+    "2026-11-13T12:46:54+03:00",
+    "2026-11-13T12:46:55+03:00",
+    "2026-11-13T12:50:11+03:00",
+    "2026-11-13T12:50:12+03:00"
   ],
-  "rev": 19,
+  "rev": 31,
   "waiting": null,
   "waits": [
     {
@@ -789,6 +807,88 @@ window.STATE =
       "g": "G3",
       "ok": true,
       "problems": 0
+    },
+    {
+      "t": "2026-11-13T12:19:55+03:00",
+      "k": "ticket",
+      "ids": [
+        "01"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 34,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-13T12:19:56+03:00",
+      "k": "ticket",
+      "ids": [
+        "02",
+        "03",
+        "04"
+      ],
+      "act": "start"
+    },
+    {
+      "t": "2026-11-13T12:21:42+03:00",
+      "k": "tickets",
+      "n": 5
+    },
+    {
+      "t": "2026-11-13T12:21:43+03:00",
+      "k": "gate",
+      "g": "G3",
+      "ok": true,
+      "problems": 0
+    },
+    {
+      "t": "2026-11-13T12:33:09+03:00",
+      "k": "tickets",
+      "n": 5
+    },
+    {
+      "t": "2026-11-13T12:33:10+03:00",
+      "k": "gate",
+      "g": "G3",
+      "ok": true,
+      "problems": 0
+    },
+    {
+      "t": "2026-11-13T12:34:48+03:00",
+      "k": "tickets",
+      "n": 5
+    },
+    {
+      "t": "2026-11-13T12:34:49+03:00",
+      "k": "gate",
+      "g": "G3",
+      "ok": true,
+      "problems": 0
+    },
+    {
+      "t": "2026-11-13T12:46:54+03:00",
+      "k": "tickets",
+      "n": 5
+    },
+    {
+      "t": "2026-11-13T12:46:55+03:00",
+      "k": "gate",
+      "g": "G3",
+      "ok": true,
+      "problems": 0
+    },
+    {
+      "t": "2026-11-13T12:50:11+03:00",
+      "k": "tickets",
+      "n": 5
+    },
+    {
+      "t": "2026-11-13T12:50:12+03:00",
+      "k": "gate",
+      "g": "G3",
+      "ok": true,
+      "problems": 0
     }
   ],
   "reqList": [
@@ -830,7 +930,8 @@ window.STATE =
     {
       "id": "R008",
       "text": "«Перед переносом проверить уже выполненную работу в текущей ветке разработки админки и использовать её.»",
-      "status": "in-ticket"
+      "status": "dropped",
+      "why": "Пользователь: «Отдельной заготовки админки CatPart нет — упоминание в ТЗ было предположением. Искать её дальше не нужно.»"
     },
     {
       "id": "R009",
@@ -1475,7 +1576,8 @@ window.STATE =
     {
       "id": "R137",
       "text": "«На целевом хостинге выполняется согласованная контрольная отправка с проверкой получения.»",
-      "status": "in-ticket"
+      "status": "deferred",
+      "why": "Пользователь: «Действующие сайты CatPart и СМ ТЕХНО не изменяй.» Проверка хостинга NOT RUN; локальные роли проверяются отдельно"
     },
     {
       "id": "R138",
@@ -1705,7 +1807,8 @@ window.STATE =
     {
       "id": "R183",
       "text": "«Проверять доступы реальной рабочей роли на целевом окружении.»",
-      "status": "in-ticket"
+      "status": "deferred",
+      "why": "Пользователь: «Действующие сайты CatPart и СМ ТЕХНО не изменяй.» Проверка хостинга NOT RUN; локальные роли проверяются отдельно"
     },
     {
       "id": "R184",
@@ -1979,7 +2082,7 @@ window.STATE =
     },
     "G3": {
       "ok": true,
-      "at": "2026-11-13T12:18:46+03:00",
+      "at": "2026-11-13T12:50:12+03:00",
       "problems": 0
     }
   },

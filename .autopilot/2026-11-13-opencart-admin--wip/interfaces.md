@@ -29,3 +29,26 @@ Runs after02/03/04, owned tools build/package, docs/admin-guide.md docs/admin-ar
 
 ## Таск01: проверенная основа
 Factory/AdminController/autoload соответствуют контракту. tools/admin-dev.py setup|start|stop|refresh|status [--runtime PATH]. Стенд http://127.0.0.1:8095, DB catpart_admin_2be116d76378. Private runtime local-dev/admin-runtime; accounts.json содержит синтетических сотрудников и не печатается/не коммитится. PHP для проверок D:/codex/cat-part/cat-part/local-dev/bin/php/php.exe -c local-dev/admin-runtime/php.ini. Refresh вызывает доступные static domain migrate и Content seed. Проверено: HTTP/nativeACL27, guard7, lint23;4053coreфайла совпадают с pinnedupstream. Изображения источника выдаются только read-only через router. Никаких domain функций ещё нет.
+
+Уточнение зоны02 по реальному коду: Views/catalog/product.php и узко Controllers/CatalogController.php для передачи product/category metadata в общий layout. Общий layout/sitemap/redirect reader остаются у03.
+
+## Уточнение границ03/02/04
+Content дополнительно владеет BlogController.php (author/canonical/OG/noindex/related), ContentDefaults.json/ContentUi.php и собственными admin assets. CatalogSafety — общий безопасный input helper, единственный автор02,03читает согласованный API; финальная проверка03после стабилизации helper02. Forms keys: lead_title/lead_hint/lead_button/lead_consent и checkout_*;03seed/overlay,04рендер и обработка.
+
+## D01: URL граница, обнаружено04
+AdminController::url возвращает RAW URL (native Url::link third argument=true); каждый HTML caller экранирует ровно один раз через esc. Иначе &amp;amp; ломает action/user_token. Единственная shared правка AdminController.php разрешена04 с реальным HTTP link/form regression, остальные измененияfoundationне нужны.
+
+## Проверенная семантика времени и уточнение04
+Read-only MariaDB metadata 2026-11-13: @@global.time_zone=SYSTEM, @@system_time_zone=Europe/Moscow, NOW()-UTC_TIMESTAMP()=03:00:00. Legacy App не задавал sessionTZ. Старые naive blog_posts.published_at переводятся Europe/Moscow→UTC ровно один раз на своей clone DB, original values сохраняются; marker не допускает повторного сдвига. TIMESTAMP поля СУБД не сдвигать вручную как DATETIME. Таск04 дополнительно владеет узко assets/js/app.js: безопасные textContent сообщения structured errors возле полей форм, без изменения прочего поведения.
+
+## D02/D03: публичные потребители и ACL status
+Brand SEO получает минимальную публичную /brand/{slug} страницу в текущем catalog layout, logo/description/products, без возврата удалённого ранее brand selector.02владеет CatalogController::brand/query/model/template и узким currency argument в Views/catalog/_products.php;03добавляет согласованный route и published-brand sitemap. Обе стороны используют /brand/{slug} для redirects. money(value,currency=RUB) сохраняет дробную часть цены;03helper,02catalog/cards,04cart/snapshots. Разные валюты не складываются через выдуманный курс: менеджер подтверждает условия, cp snapshots хранят каждую валюту.03имеет разрешение на узкий shared shell header403 для native error/permission без изменения ACL или core.
+
+## D04: native Request boundary
+OpenCart Request::clean уже HTML-экранирует admin POST строки. Custom CatPart контроллеры декодируют ровно один раз перед своими серверными HTML/URL/text validators, затем экранируют только при HTML output. Public MVC raw $_POST не декодировать как nativeinput. Реальная native форма должна сохранять rich HTML и literal ampersands/quotes, не ослабляя sanitizer.
+
+## Существующие публичные подтверждения
+Read-only HTTPS2026-11-13 подтвердил200и ожидаемый marker у двух файлов: yandex_130ab6b1c0898944.html SHA2564fc476e61833a209de8a1afc5db1f90059cb14a4452fa1d479480e98b8af2009; yandex_5c308862defefe42.html SHA2560ab98e73db4a83ac222ad26c9fd2dd6a184b7cca644346bbbb1ad5572317bea8.03добавляет130изпубличногоответа в задачу; чужойuntrackedфайлне трогается. Main5cсохраняется. Ни кабинет, ни боевойхост не менялись.
+
+## Таск04: проверенные интерфейсы
+Requests::migrate/submitOrder/submitLead/receipt/update/listing/historyRows/stats; Outbox::migrate/run/retry/captureTransport. Native order+cp full immutable per-line currency snapshots, manager lifecycle/history/repricing, durable capture-only outbox. Перепроверено root: tests/admin-requests.php29/0; NODE_PATH cachedruntime + python tools/test-checkout.py7/0 (browser/nativeACL/MIME),10.9s. Python принимает CATPART_ADMIN_RUNTIME; PHP integration пока default task runtime,05добавит portable runtime selector. Shared AdminController::url raw→HTML escaping exactly once. Неизвестный смешанный currency total0 не выдумывает FX/выручку.

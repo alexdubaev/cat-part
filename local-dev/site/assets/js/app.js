@@ -121,7 +121,7 @@
   // подменяем разметку, и никогда не трогаем action/method.
   var leadForms = document.querySelectorAll('form[data-lead]');
 
-  Array.prototype.forEach.call(leadForms, function (form) {
+  Array.prototype.forEach.call(leadForms, function (form, formIndex) {
     var msg = form.querySelector('[data-lead-msg]');
     var btn = form.querySelector('button[type="submit"]');
     var busy = false;
@@ -145,6 +145,11 @@
       if (busy) return;
       busy = true;
       if (btn) btn.disabled = true;
+      Array.prototype.forEach.call(form.querySelectorAll('[data-field-error]'), function (error) { error.remove(); });
+      Array.prototype.forEach.call(form.querySelectorAll('[aria-invalid]'), function (input) {
+        input.removeAttribute('aria-invalid');
+        if ((input.getAttribute('aria-describedby') || '').indexOf('cp-lead-error-') === 0) input.removeAttribute('aria-describedby');
+      });
 
       fetch(form.action, {
         method: 'POST',
@@ -179,7 +184,26 @@
           );
           // Чистим форму только на успехе: после ошибки человек должен увидеть
           // и поправить то, что ввёл, а не набирать всё заново.
-          if (ok) form.reset();
+          if (ok) {
+            form.reset();
+            if (form.elements.lead_token && /^[a-f0-9]{64}$/.test(data.lead_token || '')) form.elements.lead_token.value = data.lead_token;
+          } else if (data && data.errors && typeof data.errors === 'object') {
+            var firstInvalid = null;
+            Object.keys(data.errors).forEach(function (key) {
+              var input = form.elements.namedItem(key);
+              if (!input || !input.closest) return;
+              var error = document.createElement('span');
+              error.className = 'cp-form-error';
+              error.setAttribute('data-field-error', key);
+              error.id = 'cp-lead-error-' + formIndex + '-' + key;
+              error.textContent = String(data.errors[key]);
+              (input.closest('label') || input.parentNode).appendChild(error);
+              input.setAttribute('aria-invalid', 'true');
+              input.setAttribute('aria-describedby', error.id);
+              if (!firstInvalid) firstInvalid = input;
+            });
+            if (firstInvalid) firstInvalid.focus();
+          }
         })
         .catch(function () {
           // Сеть отвалилась (объект, мобильный интернет) — говорим правду и

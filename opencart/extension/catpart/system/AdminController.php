@@ -22,7 +22,7 @@ abstract class AdminController extends \Opencart\System\Engine\Controller
     public static function esc(mixed $value):string { return htmlspecialchars((string)$value,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8'); }
     protected function url(string $area,string $action='',array $query=[]):string
     {
-        return $this->url->link('extension/catpart/module/'.$area.($action!==''?'.'.$action:''),http_build_query(['user_token'=>$this->session->data['user_token']]+$query));
+        return $this->url->link('extension/catpart/module/'.$area.($action!==''?'.'.$action:''),http_build_query(['user_token'=>$this->session->data['user_token']]+$query),true);
     }
     protected function redirect(string $url):void { $this->response->redirect($url); }
     protected function page(string $title,string $safeBody):void
