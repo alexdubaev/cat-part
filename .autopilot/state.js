@@ -2,7 +2,7 @@ window.STATE =
 {
   "version": 2,
   "slug": "opencart-admin",
-  "dir": "2026-11-13-opencart-admin--wip",
+  "dir": "2026-11-13-opencart-admin",
   "title": "CatPart — единая админка OpenCart",
   "mode": "semi",
   "depth": "normal",
@@ -13,8 +13,8 @@ window.STATE =
   "skillDir": "C:/Users/Alexandr/.codex/skills/autopilot",
   "baseCommit": "3f2f046",
   "startedAt": "2026-11-13T11:50:10+03:00",
-  "updatedAt": "2026-11-13T15:37:36+03:00",
-  "finishedAt": null,
+  "updatedAt": "2026-11-13T16:23:40+03:00",
+  "finishedAt": "2026-11-13T16:23:40+03:00",
   "stages": [
     {
       "id": "preflight",
@@ -60,14 +60,15 @@ window.STATE =
     },
     {
       "id": "final",
-      "status": "active",
-      "startedAt": "2026-11-13T15:09:36+03:00"
+      "status": "done",
+      "startedAt": "2026-11-13T15:09:36+03:00",
+      "finishedAt": "2026-11-13T16:23:40+03:00"
     }
   ],
   "requirements": {
     "total": 234,
-    "done": 217,
-    "inTicket": 14,
+    "done": 231,
+    "inTicket": 0,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 2,
@@ -712,10 +713,16 @@ window.STATE =
       ],
       "review": "нет — функциональное закрытие G4, без повторного whole-change code review; реальные narrow closure checks",
       "model": "сильная",
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
-      "startedAt": "2026-11-13T15:37:36+03:00"
+      "startedAt": "2026-11-13T15:37:36+03:00",
+      "finishedAt": "2026-11-13T16:06:42+03:00",
+      "tests": {
+        "passed": 35,
+        "failed": 0
+      },
+      "commit": "4595afb"
     },
     {
       "id": "F1",
@@ -758,7 +765,7 @@ window.STATE =
     }
   ],
   "tests": {
-    "passed": 47,
+    "passed": 287,
     "failed": 0
   },
   "debt": {
@@ -775,11 +782,9 @@ window.STATE =
   },
   "concerns": [],
   "blind": {
-    "checked": 235,
-    "matched": 224,
-    "mismatches": [
-      "G4 local gaps: copy/categoryimage/crosssearch/nativeRussian/rootSEO/fieldErrors/pickers/cookie/log; source-map ownerdoc now surfaced"
-    ]
+    "checked": 232,
+    "matched": 232,
+    "mismatches": []
   },
   "beats": [
     "2026-11-13T11:50:10+03:00",
@@ -825,9 +830,13 @@ window.STATE =
     "2026-11-13T15:09:36+03:00",
     "2026-11-13T15:37:34+03:00",
     "2026-11-13T15:37:35+03:00",
-    "2026-11-13T15:37:36+03:00"
+    "2026-11-13T15:37:36+03:00",
+    "2026-11-13T16:06:42+03:00",
+    "2026-11-13T16:22:15+03:00",
+    "2026-11-13T16:22:16+03:00",
+    "2026-11-13T16:23:40+03:00"
   ],
-  "rev": 47,
+  "rev": 52,
   "waiting": null,
   "waits": [
     {
@@ -1158,6 +1167,43 @@ window.STATE =
         "E1"
       ],
       "act": "start"
+    },
+    {
+      "t": "2026-11-13T16:06:42+03:00",
+      "k": "ticket",
+      "ids": [
+        "E1"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 35,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-13T16:22:15+03:00",
+      "k": "gate",
+      "g": "G4",
+      "ok": true,
+      "checked": 232,
+      "matched": 232
+    },
+    {
+      "t": "2026-11-13T16:22:15+03:00",
+      "k": "add",
+      "key": "report",
+      "n": 1
+    },
+    {
+      "t": "2026-11-13T16:22:16+03:00",
+      "k": "tests",
+      "passed": 287,
+      "failed": 0
+    },
+    {
+      "t": "2026-11-13T16:23:40+03:00",
+      "k": "finish",
+      "result": "Локальная единая админка CatPart OpenCart: каталог, содержимое, запросы, роли и проверенный пакет"
     }
   ],
   "reqList": [
@@ -1215,7 +1261,7 @@ window.STATE =
     {
       "id": "R011",
       "text": "«До реализации составить короткую таблицу: сущность → источник данных → редактор → потребители на витрине.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R012",
@@ -1265,12 +1311,12 @@ window.STATE =
     {
       "id": "R021",
       "text": "«| Обслуживание | Почта, журнал ошибок, импорт, технические инструменты |»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R022",
       "text": "«Русские понятные названия и оформление CatPart.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R023",
@@ -1305,7 +1351,7 @@ window.STATE =
     {
       "id": "R029",
       "text": "«Все бизнесовые данные и содержимое сайта должны управляться из админки.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R030",
@@ -1325,7 +1371,7 @@ window.STATE =
     {
       "id": "R033",
       "text": "«| Каталог | Товары, категории, бренды, характеристики, изображения, SEO |»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R034",
@@ -1350,7 +1396,7 @@ window.STATE =
     {
       "id": "R038",
       "text": "«| Поисковое представление | Title, description, H1, canonical, индексация, изображения ссылок |»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R039",
@@ -1360,7 +1406,7 @@ window.STATE =
     {
       "id": "R040",
       "text": "«В коде могут оставаться шаблоны компонентов, правила валидации и системные сообщения локализации. Контакты, условия поставки, рекламные тексты и другое содержимое бизнеса не должны быть разбросаны по шаблонам.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R041",
@@ -1415,12 +1461,12 @@ window.STATE =
     {
       "id": "R051",
       "text": "«Артикулы хранить строками: сохранять ведущие нули, дефисы и исходное написание. Правила поиска и сопоставления должны быть едиными для сайта, админки и импорта.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R052",
       "text": "«Категории должны поддерживать иерархию, описание, изображение, порядок, публикацию и SEO. Товары дочерних категорий должны корректно отображаться в соответствующих родительских разделах.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R053",
@@ -1430,12 +1476,12 @@ window.STATE =
     {
       "id": "R054",
       "text": "«Изменение через любой разрешённый редактор отражается на витрине.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R055",
       "text": "«Импорт не создаёт дубликаты существующих записей.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R056",
@@ -2112,7 +2158,7 @@ window.STATE =
     {
       "id": "R190",
       "text": "«Ошибки находятся возле соответствующих полей; введённые данные сохраняются.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R191",
@@ -2122,7 +2168,7 @@ window.STATE =
     {
       "id": "R192",
       "text": "«Фиксированные панели не закрывают кнопки, сообщения и поля.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R193",
@@ -2137,7 +2183,7 @@ window.STATE =
     {
       "id": "R195",
       "text": "«Админка остаётся пригодной для работы с длинными названиями и большим каталогом.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R196",
@@ -2355,11 +2401,14 @@ window.STATE =
       "problems": 0
     },
     "G4": {
-      "ok": false,
-      "at": "2026-11-13T15:37:34+03:00",
-      "checked": 235,
-      "matched": 224
+      "ok": true,
+      "at": "2026-11-13T16:22:15+03:00",
+      "checked": 232,
+      "matched": 232
     }
   },
-  "result": null
+  "result": "Локальная единая админка CatPart OpenCart: каталог, содержимое, запросы, роли и проверенный пакет",
+  "report": [
+    "G4:235examined,232localmatched;3hosting/real-role/real-mail intentionalNOTRUN under owner scope"
+  ]
 }

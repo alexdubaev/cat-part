@@ -1,8 +1,0 @@
-{
-  "request_started_at": "2026-11-13T08:49:17Z",
-  "source": "Codex current turn startedAt=1794559757",
-  "working_result_at": null,
-  "cleanup_report_tail_seconds": null,
-  "server_only_seconds": null,
-  "note": "Final elapsed must include preparation, discovery, implementation, checks, review, packaging and PR integration. Server-only timing separate if measured."
-}

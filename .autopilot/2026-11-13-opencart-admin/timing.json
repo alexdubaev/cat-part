@@ -1,0 +1,10 @@
+{
+  "request_started_at": "2026-11-13T08:49:17Z",
+  "source": "Codex current turn startedAt=1794559757",
+  "working_result_at": null,
+  "cleanup_report_tail_seconds": null,
+  "server_only_seconds": null,
+  "note": "Final elapsed must include preparation, discovery, implementation, checks, review, packaging and PR integration. Server-only timing separate if measured.",
+  "local_acceptance_verified_at": "2026-11-13T13:16:28Z",
+  "publication_note": "Actual publication-complete and cleanup/report tail will be recorded in permanent stand/reports/HANDOFF.md after Git integration; server-only duration was not separately measured."
+}
