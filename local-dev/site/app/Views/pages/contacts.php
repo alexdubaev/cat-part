@@ -37,8 +37,8 @@ $ogrn     = trim((string) cfg('site.ogrn', ''));
  * нет, сетка схлопывается в одну колонку и hero выглядит законченным — вместо
  * битого <img> с крестиком. Файл появится — колонка включится сама.
  */
-$heroImage  = 'img/contacts.webp';
-$heroExists = asset_exists($heroImage);
+$heroImage = cms_text('pages.contacts.hero_image');
+$heroExists = cms_image_exists($heroImage);
 
 ?>
 <section class="cp-hero cp-hero--page<?= $heroExists ? ' cp-hero--media' : '' ?>">
@@ -53,35 +53,31 @@ $heroExists = asset_exists($heroImage);
             <?php /* Две строки жёстко: акцент должен начинать вторую строку, как в hero
                      главной. На узких экранах заголовок переносится и сам — лишний <br>
                      там просто делает вторую строку короче, ничего не ломая. */ ?>
-            <h1 class="cp-hero__title">Контакты и<br><b>подбор</b> запчастей</h1>
-            <p class="cp-hero__text">Свяжитесь с СМ ТЕХНО по телефону или почте. Пришлите номер
-                детали или опишите узел: подтвердим применимость и ответим по вашей задаче.</p>
+            <h1 class="cp-hero__title"><?php $seoH1=(string)(cms_meta((string)parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH))['seo_h1']??'');if($seoH1!==''): ?><?= e($seoH1) ?><?php else: ?><?= e(cms_text('pages.contacts.text.001')) ?><br><b><?= e(cms_text('pages.contacts.text.002')) ?></b> <?= e(cms_text('pages.contacts.text.003')) ?><?php endif; ?></h1>
+            <p class="cp-hero__text"><?= e(cms_text('pages.contacts.text.004')) ?></p>
 
             <?php /* Список, а не три абзаца: это перечисление, и скринридер обязан
                      объявить его как список из трёх пунктов. */ ?>
             <ul class="cp-hero__list">
                 <li class="cp-hero__li">
                     <svg class="cp-hero__li-ic" aria-hidden="true"><use href="#cp-i-check"></use></svg>
-                    <span><b>Номер известен.</b> Пишите как есть: регистр, пробелы и дефисы
-                        значения не имеют.</span>
+                    <span><b><?= e(cms_text('pages.contacts.text.005')) ?></b> <?= e(cms_text('pages.contacts.text.006')) ?></span>
                 </li>
                 <li class="cp-hero__li">
                     <svg class="cp-hero__li-ic" aria-hidden="true"><use href="#cp-i-check"></use></svg>
-                    <span><b>Номер чужой или стёрт.</b> Ищем по кросс-номерам и обезличенным
-                        номерам, выходим на действующую позицию.</span>
+                    <span><b><?= e(cms_text('pages.contacts.text.007')) ?></b> <?= e(cms_text('pages.contacts.text.008')) ?></span>
                 </li>
                 <li class="cp-hero__li">
                     <svg class="cp-hero__li-ic" aria-hidden="true"><use href="#cp-i-check"></use></svg>
-                    <span><b>Номера нет вовсе.</b> Определим деталь по модели машины,
-                        серийному номеру и описанию узла.</span>
+                    <span><b><?= e(cms_text('pages.contacts.text.009')) ?></b> <?= e(cms_text('pages.contacts.text.010')) ?></span>
                 </li>
             </ul>
 
             <div class="cp-hero__cta">
                 <?php if ($email !== ''): ?>
-                    <a class="cp-btn cp-btn--primary" href="mailto:<?= e($email) ?>">Написать на почту</a>
+                    <a class="cp-btn cp-btn--primary" href="mailto:<?= e($email) ?>"><?= e(cms_text('pages.contacts.text.011')) ?></a>
                 <?php endif; ?>
-                <a class="cp-btn cp-btn--ghost" href="<?= e(url('/catalog')) ?>">Перейти в каталог</a>
+                <a class="cp-btn cp-btn--ghost" href="<?= e(url(cms_text('pages.contacts.link.001'))) ?>"><?= e(cms_text('pages.contacts.text.012')) ?></a>
             </div>
         </div>
 
@@ -95,12 +91,11 @@ $heroExists = asset_exists($heroImage);
         <?php if ($email !== ''): ?>
             <div class="cp-contact__item">
                 <svg class="cp-contact__ic" aria-hidden="true"><use href="#cp-i-mail"></use></svg>
-                <span class="cp-contact__lbl">Почта</span>
+                <span class="cp-contact__lbl"><?= e(cms_text('pages.contacts.text.013')) ?></span>
                 <span class="cp-contact__val">
                     <a href="mailto:<?= e($email) ?>"><?= e($email) ?></a>
                 </span>
-                <span class="cp-contact__hint">Номер детали, модель и серийный номер машины,
-                    фото — одним письмом.</span>
+                <span class="cp-contact__hint"><?= e(cms_text('pages.contacts.text.014')) ?></span>
             </div>
         <?php endif; ?>
 
@@ -109,7 +104,7 @@ $heroExists = asset_exists($heroImage);
         <?php if ($phone !== '' && $phoneRaw !== ''): ?>
             <div class="cp-contact__item">
                 <svg class="cp-contact__ic" aria-hidden="true"><use href="#cp-i-phone"></use></svg>
-                <span class="cp-contact__lbl">Телефон</span>
+                <span class="cp-contact__lbl"><?= e(cms_text('pages.contacts.text.015')) ?></span>
                 <span class="cp-contact__val">
                     <a href="tel:<?= e($phoneRaw) ?>"><?= e($phone) ?></a>
                 </span>
@@ -119,7 +114,7 @@ $heroExists = asset_exists($heroImage);
         <?php foreach ($brandPhones as $phoneItem): ?>
             <div class="cp-contact__item">
                 <svg class="cp-contact__ic" aria-hidden="true"><use href="#cp-i-phone"></use></svg>
-                <span class="cp-contact__lbl">Телефон</span>
+                <span class="cp-contact__lbl"><?= e(cms_text('pages.contacts.text.016')) ?></span>
                 <span class="cp-contact__val"><a href="tel:<?= e((string) ($phoneItem['tel'] ?? '')) ?>"><?= e((string) ($phoneItem['label'] ?? '')) ?></a></span>
             </div>
         <?php endforeach; ?>
@@ -127,39 +122,14 @@ $heroExists = asset_exists($heroImage);
         <?php if ($address !== ''): ?>
             <div class="cp-contact__item">
                 <svg class="cp-contact__ic" aria-hidden="true"><use href="#cp-i-pin"></use></svg>
-                <span class="cp-contact__lbl">Адрес</span>
+                <span class="cp-contact__lbl"><?= e(cms_text('pages.contacts.text.017')) ?></span>
                 <span class="cp-contact__val"><?= e($address) ?></span>
             </div>
         <?php endif; ?>
     </div>
 
     <div class="cp-doc">
-        <div class="cp-prose">
-            <h2>Что прислать для быстрого ответа</h2>
-            <p>Подбор запчастей — это идентификация детали. Чем точнее вводные, тем меньше
-                уточняющих писем и тем быстрее вы получите ответ:</p>
-            <ul>
-                <li><strong>Номер детали</strong> — с самой детали, таблички или из документов.
-                    Регистр, пробелы и дефисы не важны.</li>
-                <li><strong>Модель и серийный номер машины</strong> — по ним проверяется
-                    применимость. Один и тот же узел на разных сериях может отличаться.</li>
-                <li><strong>Фотографии</strong> — детали, её маркировки, места установки.
-                    Если номер стёрт, часто выручает именно фото.</li>
-                <li><strong>Количество и город доставки.</strong></li>
-            </ul>
-            <p>Номера нет вовсе — опишите узел и что произошло. Это нормальная ситуация,
-                деталь определяется по машине.</p>
-
-            <?php if ($legal !== '' || $inn !== '' || $ogrn !== ''): ?>
-                <h2>Реквизиты</h2>
-                <ul>
-                    <?php if ($legal !== ''): ?><li><?= e($legal) ?></li><?php endif; ?>
-                    <?php if ($inn !== ''): ?><li>ИНН <?= e($inn) ?></li><?php endif; ?>
-                    <?php if ($ogrn !== ''): ?><li>ОГРН <?= e($ogrn) ?></li><?php endif; ?>
-                </ul>
-            <?php endif; ?>
-
-        </div>
+        <div class="cp-prose"><?= cms_html('pages.contacts.body') ?></div>
     </div>
 </section>
 
@@ -183,16 +153,18 @@ require __DIR__ . '/../partials/leadform.php';
     <div class="cp-help">
         <div class="cp-help__in">
             <div>
-                <h2 class="cp-help__t">Знаете номер детали?</h2>
-                <p class="cp-help__d">Проверьте наличие в каталоге — поиск понимает
-                    кросс-номера и любой формат записи артикула.</p>
+                <h2 class="cp-help__t"><?= e(cms_text('pages.contacts.text.018')) ?></h2>
+                <p class="cp-help__d"><?= e(cms_text('pages.contacts.text.019')) ?></p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="<?= e(url('/catalog')) ?>">В каталог</a>
+                <a class="cp-btn cp-btn--primary" href="<?= e(url(cms_text('pages.contacts.link.002'))) ?>"><?= e(cms_text('pages.contacts.text.020')) ?></a>
                 <?php if ($email !== ''): ?>
-                    <a class="cp-btn cp-btn--ghost" href="mailto:<?= e($email) ?>">Написать нам</a>
+                    <a class="cp-btn cp-btn--ghost" href="mailto:<?= e($email) ?>"><?= e(cms_text('pages.contacts.text.021')) ?></a>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 </section>
+
+<?php if(cfg('site.map_widget','')!==''): ?><section class="cp-wrap cp-section"><iframe title="Карта офиса" src="<?= e(cfg('site.map_widget')) ?>" width="100%" height="400" loading="lazy" referrerpolicy="no-referrer-when-downgrade" style="border:0"></iframe></section><?php endif; ?>
+<?php if(cfg('site.hours','')!=='' || cfg('site.office','')!=='' || cfg('site.legal','')!==''): ?><section class="cp-wrap cp-section"><div class="cp-prose"><p><?= e(cfg('site.office','')) ?></p><p><?= e(cfg('site.hours','')) ?></p><p><?= e(cfg('site.legal','')) ?> <?= e(cfg('site.inn','')) ?> <?= e(cfg('site.ogrn','')) ?></p></div></section><?php endif; ?>

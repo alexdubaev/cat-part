@@ -60,7 +60,7 @@ final class BlogController extends Controller
         }
 
         $title = (string) $post['title'];
-        $canonical = '/stati/' . (string) $post['slug'];
+        $canonical = (string)($post['canonical']??'') ?: '/stati/' . (string) $post['slug'];
 
         $page = [
             'title'       => (string) ($post['seo_title'] ?: $title . ' | ' . App::config('site.name')),
@@ -69,6 +69,7 @@ final class BlogController extends Controller
             // Фолбэк на excerpt: seo_description у статьи может быть не заполнен.
             'description' => (string) ($post['seo_description'] ?: ($post['excerpt'] ?? '')),
             'canonical'   => $canonical,
+            'noindex' => !empty($post['noindex']),
             'breadcrumb'  => [
                 ['name' => 'Статьи', 'url' => '/stati'],
                 ['name' => $title],
@@ -80,7 +81,7 @@ final class BlogController extends Controller
         // при реальной картинке: пустая строка не «нейтральна» — layout прогнал бы её
         // через url() и выдал в <meta og:image> голый адрес сайта вместо изображения.
         // Пока ключа нет, layout сам подставит дефолтную OG-картинку.
-        $image = trim((string) ($post['image_url'] ?? ''));
+        $image = trim((string) (($post['og_image']??'') ?: ($post['image_url'] ?? '')));
         if ($image === '') {
             $mapped = article_graphic((string) ($post['slug'] ?? ''));
             if (asset_exists($mapped)) {
@@ -112,7 +113,7 @@ final class BlogController extends Controller
             '@context'         => 'https://schema.org',
             '@type'            => 'Article',
             'headline'         => (string) $post['title'],
-            'author'           => $publisher,
+            'author' => trim((string)($post['author']??''))!=='' ? ['@type'=>'Person','name'=>$post['author']] : $publisher,
             'publisher'        => $publisher,
             'mainEntityOfPage' => url($canonical),
         ];
@@ -121,7 +122,8 @@ final class BlogController extends Controller
         // Донор клал в разметку сырое '2026-07-01 10:00:00' — для schema.org это
         // невалидное значение: спецификация требует ISO 8601, там обязателен 'T'
         // между датой и временем. Битую дату валидатор просто выбрасывает.
-        $ts = strtotime((string) ($post['published_at'] ?? ''));
+        $rawDate = trim((string)($post['published_at']??''));
+        $ts = $rawDate!=='' ? (new \DateTimeImmutable($rawDate,new \DateTimeZone('UTC')))->getTimestamp() : false;
         if ($ts !== false) {
             $ld['datePublished'] = date('c', $ts);
         }

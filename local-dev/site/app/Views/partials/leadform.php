@@ -2,36 +2,14 @@
 
 declare(strict_types=1);
 
-/**
- * Блок «Оставить заявку» — переиспользуемая форма (главная, контакты, раздел каталога).
- *
- * Подключается через require прямо из вьюхи, поэтому видит её локальные переменные.
- * Оба параметра необязательны — партиал самодостаточен и без них:
- *
- *   $formTitle  — заголовок блока (дефолт ниже);
- *   $formSource — метка «откуда пришла заявка»: 'home' | 'contacts' | 'catalog'.
- *                 Уезжает в скрытое поле source и попадает в тему письма: без неё
- *                 в почте лежит десяток одинаковых заявок без намёка на страницу.
- *
- * ⚠️ ПОЛЯ: имя + телефон, и всё. Ни «Комментарий», ни e-mail, ни модель техники,
- * ни артикул. Это единое требование заказчика по всем его сайтам, а не недоделка:
- * захотелось добавить поле — сначала спросите заказчика, потом правьте.
- *
- * ⚠️ ФАКТЫ: рядом с формой нет ни одного обещания — ни «перезвоним за 15 минут»,
- * ни сроков, ни гарантий. Ничего этого нам не называли (plans/2026-07-15_catpart_plan.md,
- * «Открытые вопросы»), а срок ответа на витрине — это обещание, которое кто-то предъявит.
- *
- * ⚠️ ОДИН БЛОК НА СТРАНИЦУ. На это завязаны три вещи: id полей (label→for), якорь
- * #zayavka (на него возвращает LeadController после отправки без JS) и флеш-сообщение
- * (getFlash читает и гасит ключ — второму блоку не досталось бы ничего).
- *
- * @var string|null $formTitle
- * @var string|null $formSource
- */
-
+use App\Core\App;
 use App\Core\Session;
 
-$lfTitle  = trim((string) ($formTitle ?? '')) ?: 'Оставить заявку на подбор';
+$lfText=static fn(string $key,string $fallback):string => (string)App::config('forms.'.$key,$fallback);
+$lfSource = trim((string)($formSource??''))?:'site';
+$lfTitle=trim((string)App::config('forms.lead_titles.'.$lfSource,''))?:trim((string)App::config('forms.lead_title',''))?:trim((string)($formTitle??''))?:'Оставить заявку на подбор';
+$leadToken=bin2hex(random_bytes(32));
+if(!is_string(Session::get('request_owner')))Session::set('request_owner',bin2hex(random_bytes(32)));
 $lfSource = trim((string) ($formSource ?? '')) ?: 'site';
 
 /*
@@ -47,9 +25,13 @@ $lfErr = trim((string) Session::getFlash('lead_error', ''));
  * и заставлять человека набирать телефон заново из-за опечатки в нём же — верный
  * способ не получить вторую попытку.
  */
-$lfOld   = (array) Session::getFlash('lead_old', []);
+$lfOld = (array)Session::getFlash('lead_old',[]);
+$lfErrors=(array)Session::getFlash('lead_field_errors',[]);
+$lfFieldError=static fn(string $key):string => isset($lfErrors[$key])?'<span class="cp-form-error" data-field-error="'.$key.'">'.e($lfErrors[$key]).'</span>':'';
 $lfName  = trim((string) ($lfOld['name'] ?? ''));
 $lfPhone = trim((string) ($lfOld['phone'] ?? ''));
+$lfEmail=(string)($lfOld['email']??'');
+$lfComment=(string)($lfOld['comment']??'');
 
 // Успех и ошибка делят один узел: JS пишет в него же, второй копии разметки не нужно.
 $lfMsg = $lfOk !== '' ? $lfOk : $lfErr;
@@ -60,11 +42,8 @@ $lfMsg = $lfOk !== '' ? $lfOk : $lfErr;
         <div class="cp-leadform__in">
             <div class="cp-leadform__txt">
                 <h2 class="cp-leadform__t"><?= e($lfTitle) ?></h2>
-                <p class="cp-leadform__d">Оставьте имя и телефон — свяжемся с вами, чтобы уточнить
-                    деталь и условия поставки.</p>
-                <p class="cp-leadform__note">Пригодится к разговору: номер с детали или таблички,
-                    модель и серийный номер машины. Номера нет — определим деталь по узлу,
-                    это нормальная рабочая ситуация.</p>
+                <p class="cp-leadform__d"><?= e($lfText('lead_hint','Оставьте имя и телефон — свяжемся с вами, чтобы уточнить деталь и условия поставки.')) ?></p>
+                <p class="cp-leadform__note"><?= e($lfText('lead_note','Пригодится к разговору: номер с детали или таблички, модель и серийный номер машины. Номера нет — определим деталь по узлу, это нормальная рабочая ситуация.')) ?></p>
             </div>
 
             <?php /* Без JS это обычный POST-переход: action ведёт на реальный маршрут,
@@ -72,6 +51,7 @@ $lfMsg = $lfOk !== '' ? $lfOk : $lfErr;
                      на работоспособность формы она не влияет. */ ?>
             <form class="cp-leadform__form" method="post" action="<?= e(url('/zayavka')) ?>" data-lead>
                 <?= csrf_field() ?>
+                <input type="hidden" name="lead_token" value="<?= e($leadToken) ?>">
                 <input type="hidden" name="source" value="<?= e($lfSource) ?>">
 
                 <?php /* role=status — вежливая live-область: скринридер объявит ответ сервера,
@@ -80,21 +60,24 @@ $lfMsg = $lfOk !== '' ? $lfOk : $lfErr;
                    data-lead-msg role="status"<?= $lfMsg === '' ? ' hidden' : '' ?>><?= e($lfMsg) ?></p>
 
                 <label class="cp-fld">
-                    <span class="cp-fld__lbl">Имя</span>
+                    <span class="cp-fld__lbl"><?= e($lfText('name_label','Имя')) ?></span>
                     <input class="cp-fld__inp" type="text" name="name" required
                            autocomplete="name" maxlength="120" placeholder="Как к вам обращаться"
-                           value="<?= e($lfName) ?>">
+                           value="<?= e($lfName) ?>"<?= isset($lfErrors['name'])?' aria-invalid="true"':'' ?>><?= $lfFieldError('name') ?>
                 </label>
 
                 <label class="cp-fld">
-                    <span class="cp-fld__lbl">Телефон</span>
+                    <span class="cp-fld__lbl"><?= e($lfText('phone_label','Телефон')) ?></span>
                     <?php /* type=tel + inputmode=tel — на телефоне открывается цифровая клавиатура.
                              Формат не навязываем маской: человек диктует номер как привык,
                              а «минимум 10 цифр» проверит сервер (см. LeadController). */ ?>
                     <input class="cp-fld__inp" type="tel" name="phone" required
-                           autocomplete="tel" inputmode="tel" maxlength="32"
-                           placeholder="+7 900 000-00-00" value="<?= e($lfPhone) ?>">
+                           autocomplete="tel" inputmode="tel" maxlength="40"
+                           placeholder="+7 900 000-00-00" value="<?= e($lfPhone) ?>"<?= isset($lfErrors['phone'])?' aria-invalid="true"':'' ?>><?= $lfFieldError('phone') ?>
                 </label>
+
+                <label class="cp-fld"><span class="cp-fld__lbl"><?= e($lfText('email_label','Email (необязательно)')) ?></span><input class="cp-fld__inp" type="email" name="email" maxlength="254" autocomplete="email" value="<?= e($lfEmail) ?>"<?= isset($lfErrors['email'])?' aria-invalid="true"':'' ?>><?= $lfFieldError('email') ?></label>
+                <label class="cp-fld"><span class="cp-fld__lbl"><?= e($lfText('message_label','Сообщение (необязательно)')) ?></span><textarea class="cp-fld__inp" name="comment" maxlength="4000"><?= e($lfComment) ?></textarea><?= $lfFieldError('comment') ?></label>
 
                 <?php /* Ловушка для ботов. Не type=hidden: скрытые поля бот пропускает, а видимое
                          текстовое с «человеческим» именем — заполняет. Прячем стилями
@@ -109,9 +92,7 @@ $lfMsg = $lfOk !== '' ? $lfOk : $lfErr;
 
                 <label class="cp-leadform__agree">
                     <input type="checkbox" name="consent" value="1" required>
-                    <span>Согласен на обработку персональных данных и принимаю
-                        <a href="<?= e(url('/politika-konfidencialnosti')) ?>" target="_blank" rel="noopener">политику
-                        конфиденциальности</a>.</span>
+                    <span><?= e($lfText('lead_consent','Согласен на обработку персональных данных и принимаю политику конфиденциальности.')) ?> <a href="<?= e(url('/politika-konfidencialnosti')) ?>" target="_blank" rel="noopener">Политика конфиденциальности</a></span><?= $lfFieldError('consent') ?>
                 </label>
 
                 <?php /* Иконка + текст. Горизонтальный padding и центрирование содержимого дают
@@ -119,7 +100,7 @@ $lfMsg = $lfOk !== '' ? $lfOk : $lfErr;
                          намеренно: обнулишь padding у кнопки с иконкой, и знак слипнется с краем. */ ?>
                 <button class="cp-btn cp-btn--primary cp-leadform__btn" type="submit">
                     <svg class="cp-leadform__btn-ic" aria-hidden="true"><use href="#cp-i-mail"></use></svg>
-                    <span>Отправить заявку</span>
+                    <span><?= e($lfText('lead_button','Отправить заявку')) ?></span>
                 </button>
             </form>
         </div>

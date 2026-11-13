@@ -13,15 +13,12 @@ $posts = $posts ?? [];
 
 ?>
 <section class="cp-wrap cp-section">
-    <h1 class="cp-h1">Статьи</h1>
-    <p class="cp-lead">Разбираем то, что мешает быстро найти и правильно выбрать деталь: как читается
-        номер, чем оригинал отличается от аналога и восстановленной детали, когда ходовая уже просит
-        замены и почему поддельный фильтр обходится дороже настоящего.</p>
+    <h1 class="cp-h1"><?= e(cms_text('blog.index.text.001')) ?></h1>
+    <p class="cp-lead"><?= e(cms_text('blog.index.text.002')) ?></p>
 
     <?php if ($posts === []): ?>
-        <p class="cp-empty">Статьи готовятся. А пока нужна деталь — напишите номер на
-            <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>,
-            подберём и проверим применимость.</p>
+        <p class="cp-empty"><?= e(cms_text('blog.index.text.003')) ?>
+            <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a><?= e(cms_text('blog.index.text.004')) ?></p>
     <?php else: ?>
         <div class="cp-posts">
             <?php foreach ($posts as $p): ?>
@@ -35,14 +32,12 @@ $posts = $posts ?? [];
     <div class="cp-help">
         <div class="cp-help__in">
             <div>
-                <h2 class="cp-help__t">Остался вопрос по конкретной машине?</h2>
-                <p class="cp-help__d">Статья отвечает на общий вопрос, а подбор — всегда про
-                    конкретный номер. Пришлите номер с детали или таблички, модель и серийный номер
-                    машины — ответим по применимости.</p>
+                <h2 class="cp-help__t"><?= e(cms_text('blog.index.text.005')) ?></h2>
+                <p class="cp-help__d"><?= e(cms_text('blog.index.text.006')) ?></p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>">Написать нам</a>
-                <a class="cp-btn cp-btn--ghost" href="<?= e(url('/catalog')) ?>">Каталог</a>
+                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(cms_text('blog.index.text.007')) ?></a>
+                <a class="cp-btn cp-btn--ghost" href="<?= e(url(cms_text('blog.index.link.001'))) ?>"><?= e(cms_text('blog.index.text.008')) ?></a>
             </div>
         </div>
     </div>

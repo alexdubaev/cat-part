@@ -80,7 +80,7 @@ foreach ($attributes as $a) {
                     <?php if ($main !== ''): ?>
                         <?php /* fetchpriority=high — это LCP-элемент страницы. */ ?>
                         <img class="cp-gal__img" data-gal-main src="<?= e($main) ?>"
-                             alt="<?= e($name) ?>" width="620" height="465" fetchpriority="high">
+                             alt="<?= e((string) ($images[0]['alt'] ?? $name)) ?>" width="620" height="465" fetchpriority="high">
                     <?php else: ?>
                         <svg class="cp-gal__ph" aria-hidden="true"><use href="#cp-i-part"></use></svg>
                     <?php endif; ?>
@@ -95,12 +95,13 @@ foreach ($attributes as $a) {
                         <?php foreach ($images as $i => $img): ?>
                             <button class="cp-gal__thumb<?= $i === 0 ? ' is-active' : '' ?>"
                                     type="button" data-gal-src="<?= e(product_image_url((string) $img['url'])) ?>"
-                                    aria-label="Фото <?= e((string) ($i + 1)) ?>">
-                                <img src="<?= e(product_image_url((string) $img['url'])) ?>" alt="" loading="lazy" width="88" height="66">
+                                    data-gal-alt="<?= e((string) ($img['alt'] ?? $name)) ?>" data-gal-caption="<?= e((string) ($img['caption'] ?? '')) ?>" aria-label="Фото <?= e((string) ($i + 1)) ?>">
+                                <img src="<?= e(product_image_url((string) $img['url'])) ?>" alt="<?= e((string) ($img['alt'] ?? '')) ?>" loading="lazy" width="88" height="66">
                             </button>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
+                <p data-gal-caption-output><?= e((string) ($images[0]['caption'] ?? '')) ?></p>
             </div>
         </div>
 
@@ -121,6 +122,9 @@ foreach ($attributes as $a) {
             </div>
 
             <h1 class="cp-pcard__h1"><?= e($h1 ?? $name) ?></h1>
+            <?php if (!empty($product['short_description'])): ?><p><?= e((string) $product['short_description']) ?></p><?php endif; ?>
+            <?php if (!empty($product['brand_name'])): ?><p>Бренд: <?php if (!empty($product['brand_active'])): ?><a href="<?= e(url('/brand/' . $product['brand_slug'])) ?>"><?= e((string) $product['brand_name']) ?></a><?php else: ?><?= e((string) $product['brand_name']) ?><?php endif; ?></p><?php endif; ?>
+            <?php if (!empty($product['delivery_terms'])): ?><p><?= e((string) $product['delivery_terms']) ?></p><?php endif; ?>
 
             <?php if ($quick !== []): ?>
                 <ul class="cp-facts">
@@ -135,8 +139,8 @@ foreach ($attributes as $a) {
 
             <div class="cp-buy">
                 <div class="cp-buy__price">
-                    <span class="cp-buy__val"><?= e(money($product['price'] ?? null)) ?></span>
-                    <span class="cp-buy__hint">Цена зависит от объёма и срока — назовём после проверки наличия</span>
+                    <span class="cp-buy__val"><?= e(money($product['price'] ?? null, (string) ($product['currency'] ?? 'RUB'))) ?></span>
+                    <span class="cp-buy__hint"><?= e(cms_text('product.price_hint')) ?></span>
                 </div>
                 <div class="cp-buy__act">
                     <a class="cp-btn cp-btn--primary" href="#zayavka">Запросить цену</a>
@@ -149,9 +153,9 @@ foreach ($attributes as $a) {
             </div>
 
             <ul class="cp-usp">
-                <li>Подбор по номеру детали и по модели машины</li>
-                <li>Проверяем применимость по серийному номеру</li>
-                <li>Поставка из наличия и под заказ, доставка по России</li>
+                <li><?= e(cms_text('product.usp_1')) ?></li>
+                <li><?= e(cms_text('product.usp_2')) ?></li>
+                <li><?= e(cms_text('product.usp_3')) ?></li>
             </ul>
         </div>
     </div>
@@ -208,8 +212,7 @@ foreach ($attributes as $a) {
             <h2 class="cp-tabs__h">Доставка и оплата</h2>
             <?php /* Никаких сроков и цен: их нам не называли. Отправляем на страницы,
                      где условия описаны один раз и правятся в одном месте. */ ?>
-            <p class="cp-note">Отправляем транспортными компаниями по всей России, самовывоз
-                по договорённости. Условия и способы оплаты — на отдельных страницах:</p>
+            <p class="cp-note"><?= e(cms_text('product.delivery_copy')) ?></p>
             <p><a class="cp-btn cp-btn--light cp-btn--sm" href="<?= e(url('/dostavka')) ?>">Доставка</a>
                <a class="cp-btn cp-btn--light cp-btn--sm" href="<?= e(url('/oplata')) ?>">Оплата</a>
                <a class="cp-btn cp-btn--light cp-btn--sm" href="<?= e(url('/garantiya')) ?>">Гарантия</a></p>
@@ -239,7 +242,7 @@ foreach ($attributes as $a) {
                             <?php endif; ?>
                             <a class="cp-prod__name" href="<?= e($href) ?>"><?= e((string) $p['name']) ?></a>
                             <div class="cp-prod__foot">
-                                <span class="cp-prod__price cp-prod__price--ask"><?= e(money($p['price'] ?? null)) ?></span>
+                                <span class="cp-prod__price cp-prod__price--ask"><?= e(money($p['price'] ?? null, (string) ($p['currency'] ?? 'RUB'))) ?></span>
                             </div>
                         </div>
                     </article>
@@ -254,3 +257,5 @@ foreach ($attributes as $a) {
 $formTitle  = $sku !== '' ? 'Запросить цену и срок по ' . $sku : 'Запросить цену и срок';
 $formSource = 'product';
 require __DIR__ . '/../partials/leadform.php';
+?>
+<script>document.querySelectorAll('[data-gal-thumbs] button').forEach(function(b){b.addEventListener('click',function(){let main=document.querySelector('[data-gal-main]'),caption=document.querySelector('[data-gal-caption-output]');if(main)main.alt=b.dataset.galAlt||'';if(caption)caption.textContent=b.dataset.galCaption||'';});});</script>

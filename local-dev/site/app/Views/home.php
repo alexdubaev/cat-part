@@ -25,8 +25,10 @@ declare(strict_types=1);
  *      slug, title, excerpt, image_url, published_at
  */
 
+$cpHomeRendered=[];
 $cats = $rootCategories ?? [];
-$featuredSlugs = ['dvigatel', 'gidravlika', 'silovaya-peredacha', 'hodovaya-chast', 'shlangi-i-trubki', 'kabiny'];
+$homeOptions = (array) cfg('home', []);
+$featuredSlugs = (array)($homeOptions['featured_categories'] ?? []);
 $catsBySlug = array_column($cats, null, 'slug');
 $featuredCats = [];
 foreach ($featuredSlugs as $slug) {
@@ -62,7 +64,7 @@ $dateRu = static function (mixed $raw): ?array {
         return null;
     }
     try {
-        $d = new DateTimeImmutable($v);
+        $d = (new DateTimeImmutable($v,new DateTimeZone('UTC')))->setTimezone(new DateTimeZone('Europe/Moscow'));
     } catch (Exception) {
         // Мусор в published_at не должен ронять главную — просто без даты.
         return null;
@@ -86,15 +88,15 @@ $dateRu = static function (mixed $raw): ?array {
  * Описание исходника и генерации: deliverables/home-hero.md.
  * Если файла нет, сохраняем текстовый hero без битого изображения.
  */
-$heroImage  = 'img/hero-wide.webp';
-$heroExists = asset_exists($heroImage);
+$heroImage = cms_text('home.hero_image');
+$heroExists = cms_image_exists($heroImage);
 
 ?>
-<section class="cp-hero cp-hero--home<?= $heroExists ? ' cp-hero--media' : '' ?>">
+<?php ob_start(); ?><section class="cp-hero cp-hero--home<?= $heroExists ? ' cp-hero--media' : '' ?>">
     <?php if ($heroExists): ?>
     <div class="cp-hero__media" aria-hidden="true">
         <img class="cp-hero__img" src="<?= e(asset($heroImage)) ?>" alt=""
-             srcset="<?= e(asset('img/hero-wide-960.webp')) ?> 960w, <?= e(asset($heroImage)) ?> 2078w"
+             srcset="<?= e(asset($heroImage)) ?> 2078w"
              sizes="(min-width: 961px) calc(100vw + 5vw), 100vw"
              loading="eager" fetchpriority="high" decoding="async" width="2078" height="757">
     </div>
@@ -104,13 +106,12 @@ $heroExists = asset_exists($heroImage);
         <?php /* Перенос строки жёсткий: заголовок должен читаться в две строки,
                  как решил заказчик. На узких экранах он и так переносится сам,
                  лишний <br> там не мешает — вторая строка просто короче. */ ?>
-        <h1 class="cp-hero__title">Запчасти для техники<br><b>Caterpillar</b> по артикулу</h1>
-        <p class="cp-hero__text">Введите артикул, кросс-номер или название узла. Подберём оригинал
-            или совместимый аналог и рассчитаем поставку.</p>
+        <h1 class="cp-hero__title"><?= e(cms_text('home.text.001')) ?><br><b>Caterpillar</b> <?= e(cms_text('home.text.002')) ?></h1>
+        <p class="cp-hero__text"><?= e(cms_text('home.text.003')) ?></p>
 
         <div class="cp-hero__cta">
-            <a class="cp-btn cp-btn--primary" href="<?= e(url('/catalog')) ?>">Перейти в каталог</a>
-            <a class="cp-btn cp-btn--ghost" href="<?= e(url('/kontakty')) ?>">Запрос на подбор</a>
+            <a class="cp-btn cp-btn--primary" href="<?= e(url(cms_text('home.link.001'))) ?>"><?= e(cms_text('home.text.004')) ?></a>
+            <a class="cp-btn cp-btn--ghost" href="<?= e(url(cms_text('home.link.002'))) ?>"><?= e(cms_text('home.text.005')) ?></a>
         </div>
       </div>
 
@@ -121,39 +122,36 @@ $heroExists = asset_exists($heroImage);
                  ни сроков доставки: ничего этого заказчик не подтверждал. */ ?>
         <div class="cp-facts">
             <div class="cp-fact">
-                <span class="cp-fact__t">Поиск по номеру и кроссу</span>
-                <span class="cp-fact__d">Ищем по артикулу производителя и по кросс-номерам —
-                    даже если номер на снятой детали чужой или устаревший.</span>
+                <span class="cp-fact__t"><?= e(cms_text('home.text.006')) ?></span>
+                <span class="cp-fact__d"><?= e(cms_text('home.text.007')) ?></span>
             </div>
             <div class="cp-fact">
-                <span class="cp-fact__t">Оригинал и аналоги</span>
-                <span class="cp-fact__d">Показываем варианты применимости: оригинальную деталь
-                    и совместимые замены, чтобы выбор остался за вами.</span>
+                <span class="cp-fact__t"><?= e(cms_text('home.text.008')) ?></span>
+                <span class="cp-fact__d"><?= e(cms_text('home.text.009')) ?></span>
             </div>
             <div class="cp-fact">
-                <span class="cp-fact__t">Подбор по узлу</span>
-                <span class="cp-fact__d">Не знаете номер — опишите узел и модель машины,
-                    поможем определить деталь.</span>
+                <span class="cp-fact__t"><?= e(cms_text('home.text.010')) ?></span>
+                <span class="cp-fact__d"><?= e(cms_text('home.text.011')) ?></span>
             </div>
         </div>
     </div>
-</section>
+</section><?php $cpHomeRendered['hero']=ob_get_clean(); ?>
 
-<section class="cp-wrap cp-section cp-section--catalog">
+<?php ob_start(); ?><section class="cp-wrap cp-section cp-section--catalog">
     <div class="cp-section__head">
-        <h2>Разделы каталога</h2>
+        <h2><?= e(cms_text('home.text.012')) ?></h2>
         <?php if ($moreCats !== []): ?>
             <button class="cp-catalog-toggle" id="cpCatalogToggle" type="button"
                     aria-expanded="false" aria-controls="cpHomeCatalog" hidden>
-                <span data-catalog-label>Весь каталог</span>
+                <span data-catalog-label><?= e(cms_text('home.text.013')) ?></span>
                 <span data-catalog-arrow aria-hidden="true">↓</span>
             </button>
-            <noscript><a class="cp-catalog-toggle" href="<?= e(url('/catalog')) ?>">Весь каталог</a></noscript>
+            <noscript><a class="cp-catalog-toggle" href="<?= e(url(cms_text('home.link.003'))) ?>"><?= e(cms_text('home.text.014')) ?></a></noscript>
         <?php endif; ?>
     </div>
 
     <?php if ($cats === []): ?>
-        <p class="cp-empty">Каталог наполняется. Напишите нам — подберём деталь по номеру вручную:
+        <p class="cp-empty"><?= e(cms_text('home.text.015')) ?>
             <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>.</p>
     <?php else: ?>
         <div class="cp-grid cp-grid--cat cp-grid--home-cat" id="cpHomeCatalog">
@@ -171,21 +169,21 @@ $heroExists = asset_exists($heroImage);
                         <?php /* Счётчик — только реальный. До импорта он 0, и «0 позиций»
                                  на витрине честнее не показывать вовсе. */ ?>
                         <?php if ($cnt > 0): ?>
-                            <span class="cp-cat__cnt"><?= e(number_format($cnt, 0, ',', ' ')) ?> позиций</span>
+                            <span class="cp-cat__cnt"><?= e(number_format($cnt, 0, ',', ' ')) ?> <?= e(cms_text('home.text.016')) ?></span>
                         <?php endif; ?>
                     </span>
                 </a>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
-</section>
+</section><?php $cpHomeRendered['categories']=ob_get_clean(); ?>
 
-<?php $homeProducts = isset($homeProducts) && is_array($homeProducts) ? $homeProducts : []; ?>
+<?php $homeProducts = cms_home_products(isset($homeProducts)&&is_array($homeProducts)?$homeProducts:[]); ?>
 <?php if ($homeProducts !== []): ?>
-<section class="cp-wrap cp-section cp-section--tight" id="homeProducts">
+<?php ob_start(); ?><section class="cp-wrap cp-section cp-section--tight" id="homeProducts">
     <div class="cp-section__head">
-        <h2>Товары</h2>
-        <a class="cp-section__more" href="<?= e(url('/catalog')) ?>">Весь каталог →</a>
+        <h2><?= e(cms_text('home.text.017')) ?></h2>
+        <a class="cp-section__more" href="<?= e(url(cms_text('home.link.004'))) ?>"><?= e(cms_text('home.text.018')) ?></a>
     </div>
     <div class="cp-grid cp-grid--prod">
         <?php foreach ($homeProducts as $p): ?>
@@ -208,18 +206,18 @@ $heroExists = asset_exists($heroImage);
                     <a class="cp-prod__name" href="<?= e($href) ?>"><?= e($p['name']) ?></a>
                     <span class="cp-prod__stock cp-prod__stock--<?= !empty($p['in_stock']) ? 'in' : 'out' ?>"><?= !empty($p['in_stock']) ? 'В наличии' : 'Под заказ' ?></span>
                     <div class="cp-prod__foot">
-                        <span class="cp-prod__price<?= $price > 0 ? '' : ' cp-prod__price--ask' ?>"><?= e(money($p['price'] ?? null)) ?></span>
-                        <form method="post" action="<?= e(url('/korzina/add')) ?>">
+                        <span class="cp-prod__price<?= $price > 0 ? '' : ' cp-prod__price--ask' ?>"><?= e(money($p['price'] ?? null,(string)($p['currency']??'RUB'))) ?></span>
+                        <form method="post" action="<?= e(url(cms_text('home.link.005'))) ?>">
                             <?= csrf_field() ?>
                             <input type="hidden" name="product_id" value="<?= e((string) $p['id']) ?>">
-                            <button class="cp-btn cp-btn--light cp-btn--sm" type="submit">В корзину</button>
+                            <button class="cp-btn cp-btn--light cp-btn--sm" type="submit"><?= e(cms_text('home.text.019')) ?></button>
                         </form>
                     </div>
                 </div>
             </article>
         <?php endforeach; ?>
     </div>
-</section>
+</section><?php $cpHomeRendered['products']=ob_get_clean(); ?>
 <?php endif; ?>
 
 <?php
@@ -241,21 +239,19 @@ $heroExists = asset_exists($heroImage);
  * в подвале (plans/2026-07-15_catpart_plan.md, раздел 0).
  */
 ?>
-<section class="cp-wrap cp-section">
+<?php ob_start(); ?><section class="cp-wrap cp-section">
     <div class="cp-section__head">
-        <h2>О компании</h2>
-        <a class="cp-section__more" href="<?= e(url('/o-kompanii')) ?>">Подробнее →</a>
+        <h2><?= e(cms_text('home.text.020')) ?></h2>
+        <a class="cp-section__more" href="<?= e(url(cms_text('home.link.006'))) ?>"><?= e(cms_text('home.text.021')) ?></a>
     </div>
 
     <div class="cp-about cp-about--solo">
         <div class="cp-about__txt">
-            <p><strong><?= e(cfg('site.name')) ?></strong> — сайт компании СМ ТЕХНО, поставщика
-                оригинальных деталей и качественных аналогов для техники Caterpillar.</p>
-            <p>Поставляем запчасти по России: позиции бывают в наличии и под заказ. Подберём
-                деталь по артикулу, каталогу, фотографии или описанию узла.</p>
+            <p><strong><?= e(cfg('site.name')) ?></strong> <?= e(cms_text('home.text.022')) ?></p>
+            <p><?= e(cms_text('home.text.023')) ?></p>
         </div>
     </div>
-</section>
+</section><?php $cpHomeRendered['about']=ob_get_clean(); ?>
 
 <?php
 /*
@@ -267,50 +263,49 @@ $heroExists = asset_exists($heroImage);
  * спросите заказчика, см. TODO у блока «О компании» выше.
  */
 ?>
-<section class="cp-wrap cp-section">
+<?php ob_start(); ?><section class="cp-wrap cp-section">
     <div class="cp-section__head">
-        <h2>Почему у нас покупают запчасти</h2>
+        <h2><?= e(cms_text('home.text.024')) ?></h2>
     </div>
 
     <div class="cp-why">
         <div class="cp-why__i">
             <?php $benefit = benefit_graphic('in-stock'); ?><?php if (asset_exists($benefit)): ?><img class="cp-why__ic" src="<?= e(asset($benefit)) ?>" alt="" loading="lazy" width="128" height="96"><?php else: ?><svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-check"></use></svg><?php endif; ?>
-            <span class="cp-why__t">Запчасти в наличии</span>
-            <span class="cp-why__d">Ходовые позиции доступны к отгрузке без долгого ожидания.</span>
+            <span class="cp-why__t"><?= e(cms_text('home.text.025')) ?></span>
+            <span class="cp-why__d"><?= e(cms_text('home.text.026')) ?></span>
         </div>
         <div class="cp-why__i">
             <?php $benefit = benefit_graphic('made-to-order'); ?><?php if (asset_exists($benefit)): ?><img class="cp-why__ic" src="<?= e(asset($benefit)) ?>" alt="" loading="lazy" width="128" height="96"><?php else: ?><svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-kit"></use></svg><?php endif; ?>
-            <span class="cp-why__t">Поставка под заказ</span>
-            <span class="cp-why__d">Найдём и поставим редкие позиции, узлы и комплектующие под конкретную технику.</span>
+            <span class="cp-why__t"><?= e(cms_text('home.text.027')) ?></span>
+            <span class="cp-why__d"><?= e(cms_text('home.text.028')) ?></span>
         </div>
         <div class="cp-why__i">
             <?php $benefit = benefit_graphic('originals-and-analogs'); ?><?php if (asset_exists($benefit)): ?><img class="cp-why__ic" src="<?= e(asset($benefit)) ?>" alt="" loading="lazy" width="128" height="96"><?php else: ?><svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-layers"></use></svg><?php endif; ?>
-            <span class="cp-why__t">Оригиналы и аналоги</span>
-            <span class="cp-why__d">Подберём решение под бюджет и задачи эксплуатации, а выбор останется за вами.</span>
+            <span class="cp-why__t"><?= e(cms_text('home.text.029')) ?></span>
+            <span class="cp-why__d"><?= e(cms_text('home.text.030')) ?></span>
         </div>
         <div class="cp-why__i">
             <?php $benefit = benefit_graphic('accurate-fit'); ?><?php if (asset_exists($benefit)): ?><img class="cp-why__ic" src="<?= e(asset($benefit)) ?>" alt="" loading="lazy" width="128" height="96"><?php else: ?><svg class="cp-why__ic" aria-hidden="true"><use href="#cp-i-search"></use></svg><?php endif; ?>
-            <span class="cp-why__t">Точный подбор</span>
-            <span class="cp-why__d">Идентифицируем деталь по артикулу, каталогу, фото или описанию узла.</span>
+            <span class="cp-why__t"><?= e(cms_text('home.text.031')) ?></span>
+            <span class="cp-why__d"><?= e(cms_text('home.text.032')) ?></span>
         </div>
     </div>
-</section>
+</section><?php $cpHomeRendered['benefits']=ob_get_clean(); ?>
 
-<section class="cp-wrap cp-section cp-section--tight">
+<?php ob_start(); ?><section class="cp-wrap cp-section cp-section--tight">
     <div class="cp-help">
         <div class="cp-help__in">
             <div>
-                <h2 class="cp-help__t">Не нашли деталь по номеру?</h2>
-                <p class="cp-help__d">Напишите номер с детали или таблички, модель и серийный номер
-                    машины и опишите узел — ответим с вариантами применимости и условиями поставки.</p>
+                <h2 class="cp-help__t"><?= e(cms_text('home.text.033')) ?></h2>
+                <p class="cp-help__d"><?= e(cms_text('home.text.034')) ?></p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>">Написать нам</a>
-                <a class="cp-btn cp-btn--ghost" href="<?= e(url('/kontakty')) ?>">Контакты</a>
+                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(cms_text('home.text.035')) ?></a>
+                <a class="cp-btn cp-btn--ghost" href="<?= e(url(cms_text('home.link.007'))) ?>"><?= e(cms_text('home.text.036')) ?></a>
             </div>
         </div>
     </div>
-</section>
+</section><?php $cpHomeRendered['help']=ob_get_clean(); ?>
 
 <?php
 /*
@@ -323,10 +318,11 @@ $heroExists = asset_exists($heroImage);
  * Разметка и поля — в партиале, своей копии формы тут нет: три страницы с тремя
  * копиями одной формы разъедутся на первой же правке (см. partials/leadform.php).
  */
+ob_start();
 $formSource = 'home';
 $formTitle  = 'Оставить заявку на подбор';
 require __DIR__ . '/partials/leadform.php';
-?>
+?><?php $cpHomeRendered['lead']=ob_get_clean(); ?>
 
 <?php
 /*
@@ -353,10 +349,10 @@ require __DIR__ . '/partials/leadform.php';
  */
 ?>
 <?php if ($posts !== []): ?>
-<section class="cp-wrap cp-section">
+<?php ob_start(); ?><section class="cp-wrap cp-section">
     <div class="cp-section__head">
-        <h2>Новости и статьи</h2>
-        <a class="cp-section__more" href="<?= e(url('/stati')) ?>">Все статьи →</a>
+        <h2><?= e(cms_text('home.text.037')) ?></h2>
+        <a class="cp-section__more" href="<?= e(url(cms_text('home.link.008'))) ?>"><?= e(cms_text('home.text.038')) ?></a>
     </div>
 
     <div class="cp-posts">
@@ -410,10 +406,12 @@ require __DIR__ . '/partials/leadform.php';
 
                     <?php /* Не ссылка: ссылка тут уже есть, дублировать её в дереве
                              доступности незачем. */ ?>
-                    <span class="cp-post__more" aria-hidden="true">Читать статью →</span>
+                    <span class="cp-post__more" aria-hidden="true"><?= e(cms_text('home.text.039')) ?></span>
                 </div>
             </article>
         <?php endforeach; ?>
     </div>
-</section>
+</section><?php $cpHomeRendered['articles']=ob_get_clean(); ?>
 <?php endif; ?>
+
+<?php foreach(cms_home_blocks() as $blockKey) { echo $cpHomeRendered[$blockKey]??''; } ?>

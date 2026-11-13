@@ -20,6 +20,9 @@ $renderTree = static function (int $parent, int $depth = 0) use (&$renderTree, $
 ?>
 <section class="cp-wrap cp-section cp-catalog">
     <h1 class="cp-h1"><?= e($h1) ?></h1>
+    <?php if (!empty($brand['logo_url'])): ?><img src="<?= e($brand['logo_url']) ?>" alt="<?= e($brand['name']) ?>" width="140" style="max-height:80px;object-fit:contain;margin-bottom:20px"><?php endif; ?>
+    <?php if (!empty($brand['intro_html'])): ?><div class="cp-prose" style="margin-bottom:24px"><?= $brand['intro_html'] ?></div><?php endif; ?>
+    <?php if (!empty($category['image_url'])): ?><img class="cp-category-image" src="<?= e(product_image_url((string)$category['image_url'])) ?>" alt="<?= e((string)$category['name']) ?>" width="140" height="100"><?php endif; ?>
     <div class="cp-catalog__layout">
         <details class="cp-catalog-panel" open>
             <summary>Фильтры и категории</summary>

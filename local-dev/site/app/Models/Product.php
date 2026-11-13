@@ -21,7 +21,7 @@ use App\Core\App;
 final class Product
 {
     /** Колонки витрины — ровно то, что ждут вьюхи (контракт с фронтом). */
-    private const LIST_COLUMNS = 'p.id, p.slug, p.sku, p.name, p.price, p.in_stock, p.image_url';
+    private const LIST_COLUMNS = 'p.id, p.slug, p.sku, p.name, p.price, p.currency, p.in_stock, p.image_url';
 
     /**
      * Минимальная длина слова для FULLTEXT.
@@ -68,9 +68,7 @@ final class Product
         return App::db()->fetchAll(
             'SELECT ' . self::LIST_COLUMNS . '
                FROM products p
-               JOIN categories c ON c.id = p.category_id
-              WHERE c.path LIKE :prefix
-                AND c.is_active = 1
+               WHERE EXISTS (SELECT 1 FROM categories c WHERE c.is_active=1 AND c.path LIKE :prefix AND (c.id=p.category_id OR EXISTS(SELECT 1 FROM cp_product_category x WHERE x.product_id=p.id AND x.category_id=c.id)))
                 AND p.is_active = 1
               ORDER BY p.in_stock DESC, p.price, p.name
               LIMIT :lim OFFSET :off',
@@ -97,9 +95,9 @@ final class Product
      */
     public static function findBySlug(string $slug): ?array
     {
-        return App::db()->fetch(
+        $row = App::db()->fetch(
             'SELECT p.*, c.slug AS category_slug, c.name AS category_name, c.path AS category_path,
-                    b.name AS brand_name
+                    b.name AS brand_name, b.slug AS brand_slug, b.is_active AS brand_active
                FROM products p
                LEFT JOIN categories c ON c.id = p.category_id
                LEFT JOIN brands b ON b.id = p.brand_id
@@ -107,6 +105,7 @@ final class Product
               LIMIT 1',
             ['s' => $slug]
         );
+        return $row === null ? null : array_replace($row, \Catpart\Catalog::metadata(App::db()->pdo(), 'product', (int) $row['id']));
     }
 
     /** Fresh active product snapshot for cart/order validation. */
@@ -115,11 +114,12 @@ final class Product
         if ($id < 1) {
             return null;
         }
-        return App::db()->fetch(
-            'SELECT id, slug, sku, name, price, in_stock, image_url
+        $row = App::db()->fetch(
+            'SELECT id, slug, sku, name, price, currency, in_stock, image_url
                FROM products WHERE id = :id AND is_active = 1 LIMIT 1',
             ['id' => $id]
         );
+        return $row === null ? null : array_replace($row, \Catpart\Catalog::metadata(App::db()->pdo(), 'product', (int) $row['id']));
     }
 
     /**
@@ -144,8 +144,8 @@ final class Product
     public static function images(int $productId): array
     {
         return App::db()->fetchAll(
-            'SELECT url, alt, is_primary FROM product_images
-              WHERE product_id = :p ORDER BY is_primary DESC, sort, id',
+            'SELECT i.url, i.alt, i.is_primary, c.caption FROM product_images i LEFT JOIN cp_image_caption c ON c.image_id=i.id
+              WHERE i.product_id = :p ORDER BY i.is_primary DESC, i.sort, i.id',
             ['p' => $productId]
         );
     }
@@ -171,6 +171,8 @@ final class Product
      */
     public static function neighbours(int $categoryId, int $exceptId, int $limit): array
     {
+        $related = App::db()->fetchAll('SELECT ' . self::LIST_COLUMNS . ' FROM cp_product_relation r JOIN products p ON p.id=r.related_id WHERE r.product_id=:id AND p.is_active=1 ORDER BY r.kind,p.name LIMIT :lim', ['id'=>$exceptId,'lim'=>$limit]);
+        if ($related !== []) return $related;
         if ($categoryId <= 0) {
             return [];
         }
@@ -187,11 +189,11 @@ final class Product
     public static function byArticle(string $skuNorm, int $limit): array
     {
         $rows = App::db()->fetchAll(
-            'SELECT p.id, p.slug, p.sku, p.name, p.price, p.in_stock, p.image_url, 0 AS src
+            'SELECT p.id, p.slug, p.sku, p.name, p.price, p.currency, p.in_stock, p.image_url, 0 AS src
                FROM products p
               WHERE p.sku_norm = :n1 AND p.is_active = 1
               UNION
-             SELECT p.id, p.slug, p.sku, p.name, p.price, p.in_stock, p.image_url, 1 AS src
+             SELECT p.id, p.slug, p.sku, p.name, p.price, p.currency, p.in_stock, p.image_url, 1 AS src
                FROM products p
                JOIN product_cross x ON x.product_id = p.id
               WHERE x.cross_sku_norm = :n2 AND p.is_active = 1
@@ -300,15 +302,24 @@ final class Product
         return (int) ($row['c'] ?? 0);
     }
 
+    /** MariaDB returns JSON booleans as true/false, not numeric 1/0. */
+    private const INDEXABLE = "p.is_active=1 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(m.data,'$.noindex')),'false') NOT IN ('true','1')";
+
+    public static function countIndexable(): int
+    {
+        $row = App::db()->fetch("SELECT COUNT(*) AS c FROM products p LEFT JOIN cp_catalog_meta m ON m.entity='product' AND m.entity_id=p.id WHERE " . self::INDEXABLE);
+        return (int) ($row['c'] ?? 0);
+    }
+
     /** Filtered catalog; all user values are bound and sort expressions are allowlisted. */
-    public static function catalogListing(?string $prefix, string $stock, string $query, string $sort, int $limit, int $offset): array
+    public static function catalogListing(?string $prefix, string $stock, string $query, string $sort, int $limit, int $offset, ?int $brandId = null): array
     {
         $where = ['p.is_active = 1'];
         $params = [];
         $join = '';
+        if ($brandId !== null) { $where[] = 'p.brand_id = :brand'; $params['brand'] = $brandId; }
         if ($prefix !== null) {
-            $join = ' JOIN categories c ON c.id = p.category_id';
-            $where[] = 'c.is_active = 1 AND c.path LIKE :prefix';
+            $where[] = 'EXISTS (SELECT 1 FROM categories c WHERE c.is_active=1 AND c.path LIKE :prefix AND (c.id=p.category_id OR EXISTS(SELECT 1 FROM cp_product_category x WHERE x.product_id=p.id AND x.category_id=c.id)))';
             $params['prefix'] = $prefix;
         }
         if (in_array($stock, ['in', 'order'], true)) {
@@ -363,7 +374,7 @@ final class Product
     public static function slugChunk(int $limit, int $offset): array
     {
         return App::db()->fetchAll(
-            'SELECT slug, updated_at FROM products WHERE is_active = 1 ORDER BY id LIMIT :lim OFFSET :off',
+            "SELECT p.slug, p.updated_at FROM products p LEFT JOIN cp_catalog_meta m ON m.entity='product' AND m.entity_id=p.id WHERE " . self::INDEXABLE . ' ORDER BY p.id LIMIT :lim OFFSET :off',
             ['lim' => $limit, 'off' => $offset]
         );
     }

@@ -1,0 +1,14 @@
+{
+  "version": "4.1.0.4",
+  "url": "https://github.com/opencart/opencart/releases/download/4.1.0.4/opencart-4.1.0.4.zip",
+  "sha256": "cdef537f5a0a7e1b4ddbe16f589dd2e80b10150a09bfbe93ce76ef2d5c3218c0",
+  "core_changes": [],
+  "installed_extensions": [{"code": "catpart", "version": "1.0.0", "type": "local extension"}],
+  "runtime": {"verified_php": "8.3.36", "verified_mariadb": "10.11.11", "port": 3307, "host": "127.0.0.1"},
+  "required_php_extensions": ["pdo_mysql", "mysqli", "mbstring", "dom", "libxml", "zip", "fileinfo", "gd", "iconv"],
+  "editor": {"name": "CKEditor", "version": "4.22.1", "source": "pinned OpenCart archive", "license": "GPL-2.0-or-later OR LGPL-2.1-or-later OR MPL-1.1"},
+  "cmteh_source_revision": "8a5ada0da2428f274a54ac2b8d430d8b0ddc08f2",
+  "external_browser_excel_bundle_installed": false,
+  "mail_transport": "private local capture only",
+  "hosting_verification": "NOT RUN"
+}

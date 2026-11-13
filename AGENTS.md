@@ -1,18 +1,15 @@
 <!-- autopilot:start -->
-# CatPart
-PHP-сайт каталога запчастей. Рабочая локальная копия: local-dev/site. Оригинал с хостинга: cat-part.ru. База и секреты не коммитятся.
-Запуск: powershell -ExecutionPolicy Bypass -File local-dev/start-local.ps1
-Локальный адрес: http://127.0.0.1:8080/
-Требования и прогресс Autopilot: .autopilot/.
-
-## Память проекта
-- Основная область изменений: `local-dev/site`; оригинальный snapshot `cat-part.ru` не изменять. Не трогать production БД, не читать и не коммитить секреты.
-- Сайт — PHP MVC без framework/build dependencies. Сохранять существующую типографику, жёлтый/графит/белый стиль, знак CP и CatPart.
-- Для безопасной смены брендинга использовать `local-dev/site/app/Config/branding.php` (название компании, телефоны, email, офис), не править разрозненные вхождения без необходимости.
-- Core Mailer настроен на локальный private capture; реальная почта не отправляется. Не выводить содержимое пользовательских данных.
-- Команды проверки, уже подтверждённые в этой копии: `powershell -ExecutionPolicy Bypass -File local-dev/start-local.ps1`, `python tools/check-site.py`, `python tools/test-checkout.py` (10 passed). Локальный адрес `http://127.0.0.1:8080/`.
-- Для новых helper scripts runtime/state paths должны определяться динамически, а не через жёстко заданные временные пути. Подготовка новых изображений: `python tools/prepare-assets.py`; товарных WebP: `python tools/prepare-product-webp.py`; не запускать массовую конвертацию без явной задачи. Брендбук: `deliverables/brandbook/index.html` и `deliverables/brandbook/brandbook.pdf`; локальные относительные assets хранить рядом. Сверять slug/name mappings с реестром `asset-manifest.json` в текущей папке сборки (`.autopilot/state.js` → `dir`).
-- Для будущих небольших правок сначала читать `.autopilot/PROGRESS.md` и относящиеся к правке требования; не загружать лишние артефакты и не выводить данные/секреты.
-- Git-коммиты делать только с явным перечнем путей. Не добавлять локальные config, секреты, `.sql`, runtime/uploads/DB inputs или тысячи товарных изображений. Инструкция `deliverables/brandbook/mail-deployment.md` требует не копировать local-only config/секреты на production.
-- `CLAUDE.md` указывает на этот файл (`@AGENTS.md`); сохранять этот указатель.
+# CatPart project memory
+- Public site remains the existing CatPart PHP MVC app and routes; isolated OpenCart 4.1.0.4 admin is extension `opencart/extension/catpart`. Preserve CatPart / Caterpillar identity, СМ ТЕХНО as the supplier (not the manufacturer), `info@cmteh.ru`, and existing analytics configuration. Architecture, 4-column source-of-truth map, and decisions: `docs/admin-architecture.md` and its ADR-001..004; operational/migration guides: `docs/admin-guide.md`, `docs/admin-migration.md`. Do not duplicate architecture docs.
+- One catalog: canonical legacy catalog tables/IDs edited by CatPart extension; native catalog stays server-blocked. Admin uses native OpenCart login/session, roles, shell and native order tables; CatPart extension handles catalog/content/settings/requests/SEO and related metadata. Public storefront is unchanged MVC/routes.
+- Preserve original source snapshot `cat-part.ru` and active CatPart site/data. Work only in isolated task runtime/DB; legacy source `local_catpart` is read-only. Never import customer/user/password/config data, expose secrets or commit runtime/private files. Mail is local capture only; never send real mail. Native accounts are in runtime `private/accounts.json`; mention only this private path pattern, never values.
+- Runtime paths/ports below are verified examples for this machine, not defaults to bake into helpers. Use own isolated QA runtime/schema; do not adopt owner stand `D:/codex/cat-part/admin-stand` (8095) or customer data. Reuse ready PHP/MariaDB/cache without mutating shared services. Old port 8080 commands are legacy storefront checks, not admin verification.
+- Native admin request values decode once at the boundary; the URL helper returns raw URLs and HTML output escapes them exactly once. Public MVC routes remain distinct. New timestamps are UTC; legacy Moscow article timestamps convert once preserving originals. `noindex` affects robots header/meta and sitemap eligibility; JSON metadata booleans are interpreted consistently.
+- Verified clean-clone command set (runtime paths/ports are examples):
+  `python tools/admin-dev.py setup --source D:/codex/cat-part/cat-part --runtime D:/codex/cat-part/admin-acceptance-runtime-20261113 --upstream D:/codex/temp/cmteh-opencart-cache/opencart-4.1.0.4.zip --port 8096`
+  `python tools/test-admin-integration.py --runtime D:/codex/cat-part/admin-acceptance-runtime-20261113 --group foundation --group catalog --group content --group requests --group browser --group seo`
+  `python tools/admin-package.py install --package D:/codex/cat-part/admin-acceptance-runtime-20261113/catpart-admin.zip --target D:/codex/cat-part/admin-acceptance-installed-20261113 --source D:/codex/cat-part/cat-part --port 8097 --apply`
+  `python tools/test-admin-integration.py --runtime D:/codex/cat-part/admin-acceptance-installed-20261113/local-dev/admin-runtime --package D:/codex/cat-part/admin-acceptance-runtime-20261113/catpart-admin.zip --group shipping --group package`
+- Verified narrow SEO checks: `CATPART_ADMIN_RUNTIME=D:/codex/cat-part/admin-stand/local-dev/admin-runtime python tools/test-admin-seo.py --case aliases`; same runtime with `python tools/test-admin-integration.py --group seo` (PowerShell: set `$env:CATPART_ADMIN_RUNTIME` first). Node tests need `NODE_PATH=$USERPROFILE/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules`.
+- Current task state and agreed scope: `.autopilot/PROGRESS.md`. Run fixture checks only on your own QA runtime/schema; the owner stand is for owner use. Browser checks require the cached NODE_PATH environment above.
 <!-- autopilot:end -->

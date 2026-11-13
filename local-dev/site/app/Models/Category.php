@@ -84,10 +84,11 @@ final class Category
     /** @return array<string,mixed>|null Полная строка (нужны intro_html и seo_*). */
     public static function findBySlug(string $slug): ?array
     {
-        return App::db()->fetch(
+        $row = App::db()->fetch(
             'SELECT * FROM categories WHERE slug = :s AND is_active = 1 LIMIT 1',
             ['s' => $slug]
         );
+        return $row === null ? null : array_replace($row, \Catpart\Catalog::metadata(App::db()->pdo(), 'category', (int) $row['id']));
     }
 
     /** @return array<string,mixed>|null */
@@ -204,6 +205,6 @@ final class Category
     /** @return list<array<string,mixed>> Все активные категории (sitemap). */
     public static function allActive(): array
     {
-        return App::db()->fetchAll('SELECT slug FROM categories WHERE is_active = 1 ORDER BY id');
+        return App::db()->fetchAll("SELECT c.slug FROM categories c LEFT JOIN cp_catalog_meta m ON m.entity='category' AND m.entity_id=c.id WHERE c.is_active=1 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(m.data,'$.noindex')),'false') NOT IN ('true','1') ORDER BY c.id");
     }
 }

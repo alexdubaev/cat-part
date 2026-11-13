@@ -18,7 +18,7 @@ declare(strict_types=1);
 <section class="cp-section cp-search">
   <div class="cp-container">
 
-    <h1 class="cp-search__title">Поиск запчастей</h1>
+    <h1 class="cp-search__title"><?= e((string)(cms_meta('/poisk')['seo_h1']??'Поиск запчастей')) ?></h1>
 
     <form class="cp-search__form" action="/poisk" method="get" role="search">
       <input
@@ -77,7 +77,7 @@ declare(strict_types=1);
                 <div class="cp-card__sku"><?= e($product['sku']) ?></div>
               <?php endif; ?>
               <h2 class="cp-card__name"><a href="<?= e($href) ?>"><?= e($product['name']) ?></a></h2>
-              <div class="cp-card__price"><?= e(money($product['price'] ?? null)) ?></div>
+              <div class="cp-card__price"><?= e(money($product['price'] ?? null, (string) ($product['currency'] ?? 'RUB'))) ?></div>
               <div class="cp-card__stock<?= !empty($product['in_stock']) ? ' cp-card__stock--in' : '' ?>">
                 <?= !empty($product['in_stock']) ? 'В наличии' : 'Под заказ' ?>
               </div>

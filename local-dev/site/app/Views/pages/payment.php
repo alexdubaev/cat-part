@@ -21,45 +21,8 @@ declare(strict_types=1);
 ?>
 <section class="cp-wrap cp-section">
     <div class="cp-doc">
-        <h1 class="cp-h1">Оплата</h1>
-        <div class="cp-prose">
-            <p>Заказ подтверждается до оплаты: вы видите итоговый состав, стоимость позиций
-                и доставки. Мы не берём деньги за «примерно ту деталь» — сначала применимость,
-                потом расчёт.</p>
-
-            <h2>Как формируется стоимость</h2>
-            <ul>
-                <li><strong>Цена указана в каталоге.</strong> Значит, позиция посчитана и цена
-                    актуальна на момент подтверждения заказа.</li>
-                <li><strong>«По запросу».</strong> Так помечены позиции, стоимость которых зависит
-                    от поставки: срока, партии, конкретного варианта исполнения. Напишите нам —
-                    посчитаем по вашему заказу.</li>
-                <li><strong>Оригинал или аналог.</strong> Разница в цене между ними бывает
-                    значительной. Мы показываем оба варианта и не решаем за вас.</li>
-            </ul>
-
-            <div class="cp-note">
-                <p>Доступные способы оплаты и порядок расчётов подтверждаем при оформлении
-                    заказа — они зависят от состава заказа и от того, оформляете вы покупку
-                    как организация или как частное лицо.</p>
-                <p>Есть вопрос по расчётам до заказа — напишите на
-                    <a href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(brand_setting('email', cfg('site.email'))) ?></a>,
-                    ответим по вашей ситуации.</p>
-            </div>
-
-            <h2>Что стоит прислать сразу</h2>
-            <p>Это ускоряет расчёт и снимает половину уточняющих писем:</p>
-            <ul>
-                <li>артикулы и количество по каждой позиции;</li>
-                <li>модель и серийный номер машины — по нему проверяется применимость;</li>
-                <li>город доставки;</li>
-                <li>на кого оформляется покупка — организация или частное лицо.</li>
-            </ul>
-
-            <h2>Изменение заказа</h2>
-            <p>Пока заказ не отгружен, состав можно поправить: убрать позицию, добавить деталь
-                из того же узла, поменять оригинал на аналог. Напишите нам — пересчитаем.</p>
-        </div>
+        <h1 class="cp-h1"><?php $seoH1=(string)(cms_meta((string)parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH))['seo_h1']??'');if($seoH1!==''): ?><?= e($seoH1) ?><?php else: ?><?= e(cms_text('pages.payment.text.001')) ?><?php endif; ?></h1>
+        <div class="cp-prose"><?= cms_html('pages.payment.body') ?></div>
     </div>
 </section>
 
@@ -67,13 +30,12 @@ declare(strict_types=1);
     <div class="cp-help">
         <div class="cp-help__in">
             <div>
-                <h2 class="cp-help__t">Нужен расчёт по заказу?</h2>
-                <p class="cp-help__d">Пришлите артикулы, количество и город — вернёмся
-                    со стоимостью и условиями.</p>
+                <h2 class="cp-help__t"><?= e(cms_text('pages.payment.text.002')) ?></h2>
+                <p class="cp-help__d"><?= e(cms_text('pages.payment.text.003')) ?></p>
             </div>
             <div class="cp-help__act">
-                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>">Написать нам</a>
-                <a class="cp-btn cp-btn--ghost" href="<?= e(url('/dostavka')) ?>">Доставка</a>
+                <a class="cp-btn cp-btn--primary" href="mailto:<?= e(brand_setting('email', cfg('site.email'))) ?>"><?= e(cms_text('pages.payment.text.004')) ?></a>
+                <a class="cp-btn cp-btn--ghost" href="<?= e(url(cms_text('pages.payment.link.001'))) ?>"><?= e(cms_text('pages.payment.text.005')) ?></a>
             </div>
         </div>
     </div>

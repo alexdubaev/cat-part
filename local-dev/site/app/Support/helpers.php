@@ -23,7 +23,7 @@ function url(string $path = '/'): string
 /** Путь к ассету (под docroot=/public ассеты лежат в /assets). */
 function asset(string $path): string
 {
-    $url = '/assets/' . ltrim($path, '/');
+    $url = str_starts_with($path, '/') ? $path : '/assets/' . ltrim($path, '/');
     // Перезапрашиваем изменённые CSS/JS, сохраняя долгий кеш остальных ресурсов.
     if (in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['css', 'js'], true)) {
         $docRoot = rtrim((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''), "/\\");
@@ -66,7 +66,7 @@ function asset_exists(string $path): bool
         return false;
     }
 
-    return is_file($docRoot . '/assets/' . ltrim($path, '/'));
+    return is_file($docRoot . (str_starts_with($path,'/') ? $path : '/assets/' . ltrim($path,'/')));
 }
 
 /** Static graphics shipped with the homepage; database image_url stays optional. */
@@ -100,7 +100,7 @@ function benefit_graphic(string $name): string
         'accurate-fit' => 'selection',
         default => $name,
     };
-    return 'img/benefits/' . $name . '.webp';
+    return cms_text('home.benefit_image.'.$name) ?: 'img/benefits/' . $name . '.webp';
 }
 
 function article_graphic(string $slug, bool $thumb = false): string
@@ -125,20 +125,22 @@ function product_image_url(string $url): string
     $candidate = preg_replace('/\.png(?=($|\?))/i', '.webp', $url) ?? $url;
     $path = (string) parse_url($candidate, PHP_URL_PATH);
     $root = rtrim((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''), '/\\');
-    if ($root !== '' && is_file($root . '/' . ltrim($path, '/'))) {
+    $sourceMedia=getenv('CATPART_SOURCE_MEDIA');
+    $sourceFile=is_string($sourceMedia)&&str_starts_with($path,'/upload/')?$sourceMedia.'/'.substr($path,8):'';
+    if (($root !== '' && is_file($root . '/' . ltrim($path, '/'))) || ($sourceFile!=='' && is_file($sourceFile))) {
         return $candidate;
     }
     return $url;
 }
 
 /** Цена в рублях: 12 500 ₽ (или «по запросу», если null/0). */
-function money(int|float|string|null $value): string
+function money(int|float|string|null $value, string $currency = 'RUB'): string
 {
-    $n = (float) $value;
-    if ($n <= 0) {
-        return 'по запросу';
-    }
-    return number_format($n, 0, ',', ' ') . ' ₽';
+    if ($value === null || (float)$value <= 0) return 'по запросу';
+    $number = (float)$value;
+    $decimals = abs($number - round($number)) > 0.000001 ? 2 : 0;
+    $symbol = ['RUB'=>'₽','USD'=>'$','EUR'=>'€'][$currency] ?? $currency;
+    return number_format($number, $decimals, ',', ' ') . ' ' . $symbol;
 }
 
 function csrf_token(): string
@@ -177,7 +179,7 @@ function cart_count(): int
     if (!is_array($cart)) return 0;
     $count = 0;
     foreach ($cart as $id => $qty) {
-        if (ctype_digit((string) $id) && is_int($qty) && $qty > 0) $count += min(99, $qty);
+        if (ctype_digit((string) $id) && is_int($qty) && $qty > 0) $count += $qty;
     }
     return $count;
 }
@@ -270,4 +272,72 @@ function page_url(string $baseUrl, int $page): string
         return $baseUrl;
     }
     return $baseUrl . (str_contains($baseUrl, '?') ? '&' : '?') . 'page=' . $page;
+}
+
+
+/** Managed public copy: values are migrated from CatPart, not supplied by another store. */
+function cms_text(string $key): string
+{
+    $fields = (array) cfg('content_fields', []);
+    if (array_key_exists($key, $fields)) $value = (string)$fields[$key];
+    else {
+        static $defaults;
+        if ($defaults === null) {
+            $file = \Catpart\Factory::systemPath() . '/ContentDefaults.json';
+            $defaults = is_file($file) ? json_decode((string)file_get_contents($file), true, 512, JSON_THROW_ON_ERROR) : [];
+        }
+        $value = (string)($defaults['fields'][$key]['value'] ?? '');
+    }
+    return strtr($value, ['{site_name}'=>(string)cfg('site.name'),'{company}'=>(string)cfg('site.company'),'{email}'=>(string)cfg('site.email'),'{phone}'=>(string)cfg('site.phone'),'{address}'=>(string)cfg('site.address')]);
+}
+function cms_html(string $key): string
+{
+    $fields = (array)cfg('content_fields', []);
+    $value = array_key_exists($key,$fields) ? (string)$fields[$key] : cms_text($key);
+    return strtr($value, ['{site_name}'=>e(cfg('site.name')),'{company}'=>e(cfg('site.company')),'{email}'=>e(cfg('site.email')),'{phone}'=>e(cfg('site.phone')),'{address}'=>e(cfg('site.address'))]);
+}
+function cms_link(string $value): string { return str_starts_with($value,'/') ? url($value) : $value; }
+function cms_menu(string $key): array
+{
+    $rows = (array)cfg('menus.'.$key, []);
+    $rows = array_filter($rows, static fn($row)=>is_array($row)&&!empty($row['enabled']));
+    usort($rows, static fn($a,$b)=>(int)($a['sort_order']??0)<=>(int)($b['sort_order']??0));
+    return array_values($rows);
+}
+function cms_image_exists(string $url): bool
+{
+    if ($url==='') return false;
+    $path = str_starts_with($url,'/') ? $url : '/assets/'.$url;
+    return is_file(BASE_PATH.$path);
+}
+function cms_home_blocks(): array
+{
+    $blocks = (array)cfg('home.blocks', []);
+    $blocks = array_filter($blocks, static fn($row)=>is_array($row)&&!empty($row['enabled']));
+    uasort($blocks, static fn($a,$b)=>(int)($a['sort_order']??0)<=>(int)($b['sort_order']??0));
+    return array_keys($blocks);
+}
+function cms_home_products(array $automatic): array
+{
+    if (cfg('home.products_mode','automatic')!=='manual') return $automatic;
+    $out=[];
+    foreach((array)cfg('home.product_ids',[]) as $id) {
+        $product=\App\Models\Product::findActiveById((int)$id);
+        if($product!==null)$out[]=$product;
+    }
+    return $out;
+}
+function cms_meta(string $path): array
+{
+    $meta=(array)cfg('page_seo',[]);$meta=(array)($meta[$path]??[]);
+    foreach(['title','description','seo_h1'] as $key)if(isset($meta[$key]))$meta[$key]=strtr((string)$meta[$key],['{site_name}'=>(string)cfg('site.name'),'{company}'=>(string)cfg('site.company'),'{email}'=>(string)cfg('site.email')]);
+    if(in_array($path,['/catalog','/poisk'],true))foreach(['title','description','seo_h1','canonical'] as $key)if(($meta[$key]??'')==='')unset($meta[$key]);
+    return $meta;
+}
+
+function cms_social_links(string $key): array
+{
+    $raw=(string)cfg('site.'.$key,'');$out=[];
+    foreach(preg_split('/\r?\n/',trim($raw),-1,PREG_SPLIT_NO_EMPTY) as $line){$parts=explode('|',$line,2);$out[]=['label'=>trim($parts[0]),'url'=>trim($parts[1]??$parts[0])];}
+    return $out;
 }

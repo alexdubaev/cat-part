@@ -29,8 +29,7 @@ $legal    = trim((string) cfg('site.legal', ''));
                     <span class="cp-logo__sub"><?= e(cfg('site.tagline')) ?></span>
                 </span>
             </div>
-            <p class="cp-ft__tag">Подбираем и поставляем запчасти для техники Caterpillar по номеру
-                детали, кросс-номеру или описанию узла. Оригинал и совместимые аналоги.</p>
+            <p class="cp-ft__tag"><?= e(cms_text('partials.footer.text.001')) ?></p>
 
             <?php /* Пусто в конфиге — блока просто нет. Заглушек не ставим. */ ?>
             <?php if ($phone !== '' && $phoneRaw !== ''): ?>
@@ -43,31 +42,14 @@ $legal    = trim((string) cfg('site.legal', ''));
                 <a class="cp-ft__mail" href="tel:<?= e((string) ($phoneItem['tel'] ?? '')) ?>"><?= e((string) ($phoneItem['label'] ?? '')) ?></a>
             <?php endforeach; ?>
             <?php if ($brandAddress !== ''): ?><span class="cp-ft__mail"><?= e($brandAddress) ?></span><?php endif; ?>
+<?php foreach(array_merge(cms_social_links('messengers'),cms_social_links('socials')) as $social): ?><a class="cp-ft__mail" href="<?= e($social['url']) ?>" rel="noopener noreferrer"><?= e($social['label']) ?></a><?php endforeach; ?>
         </div>
 
-        <div class="cp-ft__col">
-            <b>Каталог</b>
-            <a href="<?= e(url('/catalog')) ?>">Все разделы</a>
-            <a href="<?= e(url('/catalog/gidravlika')) ?>">Гидравлика</a>
-            <a href="<?= e(url('/catalog/dvigatel')) ?>">Двигатель</a>
-            <a href="<?= e(url('/catalog/hodovaya-chast')) ?>">Ходовая часть</a>
-            <a href="<?= e(url('/catalog/filtry-i-zhidkosti')) ?>">Фильтры и жидкости</a>
-        </div>
+        <div class="cp-ft__col"><b><?= e(cms_text('partials.footer.text.002')) ?></b><?php foreach(cms_menu('footer_catalog') as $item): ?><a href="<?= e(cms_link($item['url'])) ?>"><?= e($item['label']) ?></a><?php endforeach; ?></div>
 
-        <div class="cp-ft__col">
-            <b>Покупателям</b>
-            <a href="<?= e(url('/dostavka')) ?>">Доставка</a>
-            <a href="<?= e(url('/oplata')) ?>">Оплата</a>
-            <a href="<?= e(url('/garantiya')) ?>">Гарантия и возврат</a>
-            <a href="<?= e(url('/korzina')) ?>">Корзина</a>
-        </div>
+        <div class="cp-ft__col"><b><?= e(cms_text('partials.footer.text.003')) ?></b><?php foreach(cms_menu('footer_buyers') as $item): ?><a href="<?= e(cms_link($item['url'])) ?>"><?= e($item['label']) ?></a><?php endforeach; ?></div>
 
-        <div class="cp-ft__col">
-            <b>Компания</b>
-            <a href="<?= e(url('/o-kompanii')) ?>">О компании</a>
-            <a href="<?= e(url('/kontakty')) ?>">Контакты</a>
-            <a href="<?= e(url('/politika-konfidencialnosti')) ?>">Политика конфиденциальности</a>
-        </div>
+        <div class="cp-ft__col"><b><?= e(cms_text('partials.footer.text.004')) ?></b><?php foreach(cms_menu('footer_company') as $item): ?><a href="<?= e(cms_link($item['url'])) ?>"><?= e($item['label']) ?></a><?php endforeach; ?></div>
     </div>
 
     <div class="cp-wrap cp-ft__legal">
@@ -78,7 +60,7 @@ $legal    = trim((string) cfg('site.legal', ''));
         <span><?= e(cfg('site.name')) ?> · <?= e(cfg('site.domain')) ?> © <?= e(date('Y')) ?><?php
             /* Реквизиты появятся в конфиге — подтянутся сюда сами. */
             if ($legal !== ''): ?> · <?= e($legal) ?><?php endif; ?></span>
-        <a href="<?= e(url('/politika-konfidencialnosti')) ?>">Политика конфиденциальности</a>
+        <a href="<?= e(url('/politika-konfidencialnosti')) ?>"><?= e(cms_text('partials.footer.text.005')) ?></a>
     </div>
 </footer>
 
@@ -86,9 +68,8 @@ $legal    = trim((string) cfg('site.legal', ''));
          который нечем закрыть, только мешает. */ ?>
 <div class="cp-cookie" id="cpCookie" hidden>
     <div class="cp-wrap cp-cookie__in">
-        <p class="cp-cookie__txt">Мы используем cookie, чтобы сайт работал корректно и было понятно,
-            какие разделы каталога полезны. Продолжая пользоваться сайтом, вы соглашаетесь с
-            <a href="<?= e(url('/politika-konfidencialnosti')) ?>">политикой конфиденциальности</a>.</p>
-        <button class="cp-btn cp-btn--primary cp-btn--sm" id="cpCookieOk" type="button">Принять</button>
+        <p class="cp-cookie__txt"><?= e(cms_text('partials.footer.text.006')) ?>
+            <a href="<?= e(url('/politika-konfidencialnosti')) ?>"><?= e(cms_text('partials.footer.text.007')) ?></a>.</p>
+        <button class="cp-btn cp-btn--primary cp-btn--sm" id="cpCookieOk" type="button"><?= e(cms_text('partials.footer.text.008')) ?></button>
     </div>
 </div>

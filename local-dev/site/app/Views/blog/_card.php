@@ -25,7 +25,7 @@ if ($pImage === '') {
 
 // strtotime вернёт false на пустой/битой дате — тогда блок с датой просто не выводим,
 // а не печатаем '01.01.1970'.
-$pTs = strtotime((string) ($p['published_at'] ?? ''));
+$pTs = (!empty($p['published_at']) ? (new DateTimeImmutable((string)$p['published_at'],new DateTimeZone('UTC')))->getTimestamp() : false);
 
 ?>
 <article class="cp-post">

@@ -40,7 +40,7 @@ final class SearchController extends Controller
         // работает независимо от раскладки.
         header('X-Robots-Tag: noindex, follow');
 
-        $q = trim((string) ($_GET['q'] ?? ''));
+        $q = isset($_GET['q'])&&is_string($_GET['q'])?trim($_GET['q']):'';
         $perPage = max(1, (int) App::config('catalog.per_page', 24));
         $maxPage = max(1, (int) App::config('catalog.max_page', 200));
         $pageNum = max(1, (int) ($_GET['page'] ?? 1));

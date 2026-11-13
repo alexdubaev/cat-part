@@ -29,20 +29,20 @@ $q = isset($_GET['q']) && is_string($_GET['q']) ? $_GET['q'] : '';
 <header class="cp-hd">
     <div class="cp-wrap cp-hd__top">
         <a class="cp-logo cp-logo--img" href="<?= e(url('/')) ?>" aria-label="<?= e(cfg('site.name')) ?> — на главную">
-            <img class="cp-logo__img" src="<?= e(asset('img/logo.webp')) ?>" alt="<?= e(cfg('site.name')) ?>" width="266" height="34">
+            <img class="cp-logo__img" src="<?= e(cfg('site.logo')) ?>" alt="<?= e(cfg('site.name')) ?>" width="266" height="34">
         </a>
 
         <form class="cp-search" action="<?= e(url('/poisk')) ?>" method="get" role="search">
-            <label class="cp-vh" for="cpSearchInput">Поиск по каталогу</label>
+            <label class="cp-vh" for="cpSearchInput"><?= e(cms_text('partials.header.text.001')) ?></label>
             <div class="cp-search__in">
                 <svg class="cp-search__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
                     <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
                 </svg>
                 <input class="cp-search__inp" id="cpSearchInput" type="search" name="q"
                        value="<?= e($q) ?>"
-                       placeholder="Поиск по артикулу или названию"
+                       placeholder="<?= e(cms_text('partials.header.attr.001')) ?>"
                        autocomplete="off" enterkeyhint="search">
-                <button class="cp-search__btn" type="submit">Найти</button>
+                <button class="cp-search__btn" type="submit"><?= e(cms_text('partials.header.text.002')) ?></button>
             </div>
         </form>
 
@@ -53,7 +53,7 @@ $q = isset($_GET['q']) && is_string($_GET['q']) ? $_GET['q'] : '';
                 </span>
             <?php elseif ($email !== ''): ?>
                 <span class="cp-hd__mail">
-                    <span>Заявки и подбор</span>
+                    <span><?= e(cms_text('partials.header.text.003')) ?></span>
                     <a href="mailto:<?= e($email) ?>"><?= e($email) ?></a>
                 </span>
             <?php endif; ?>
@@ -76,15 +76,6 @@ $q = isset($_GET['q']) && is_string($_GET['q']) ? $_GET['q'] : '';
     </div>
 
     <div class="cp-hd__bar" id="cpNavBar">
-        <nav class="cp-wrap cp-nav" aria-label="Главное меню">
-            <a class="cp-nav__lnk cp-nav__lnk--accent" href="<?= e(url('/catalog')) ?>">Каталог</a>
-            <a class="cp-nav__lnk" href="<?= e(url('/o-kompanii')) ?>">О компании</a>
-            <a class="cp-nav__lnk" href="<?= e(url('/dostavka')) ?>">Доставка</a>
-            <a class="cp-nav__lnk" href="<?= e(url('/oplata')) ?>">Оплата</a>
-            <a class="cp-nav__lnk" href="<?= e(url('/garantiya')) ?>">Гарантия</a>
-            <?php /* «Статьи» — рядом с «Контактами», по решению заказчика. */ ?>
-            <a class="cp-nav__lnk" href="<?= e(url('/stati')) ?>">Статьи</a>
-            <a class="cp-nav__lnk" href="<?= e(url('/kontakty')) ?>">Контакты</a>
-        </nav>
+        <nav class="cp-wrap cp-nav" aria-label="Главное меню"><?php foreach(cms_menu('header') as $item): ?><a class="cp-nav__lnk<?= $item['url']==='/catalog'?' cp-nav__lnk--accent':'' ?>" href="<?= e(cms_link($item['url'])) ?>"><?= e($item['label']) ?></a><?php endforeach; ?></nav>
     </div>
 </header>
