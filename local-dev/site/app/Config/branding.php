@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 /* Public brand/contact facts. Secrets and local mail transport stay in config.local.php. */
 return [
+    'metrika_id' => '114229167',
+    'analytics_hosts' => ['cat-part.ru', 'www.cat-part.ru'],
     'company' => 'СМ ТЕХНО',
     'email' => 'info@cmteh.ru',
     'phones' => [

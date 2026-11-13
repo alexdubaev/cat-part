@@ -103,10 +103,12 @@ foreach ((array) ($P['jsonld'] ?? []) as $extra) {
 // и превратила разметку в XSS. Экранированный < для JSON-LD валиден.
 $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG;
 
-// 🔥 Баг донора №2: ID Яндекс.Метрики был вбит в шаблон в трёх местах —
-// копия сайта слала бы статистику в чужой счётчик. Берём из конфига,
-// и пока он пуст — не выводим ни счётчик, ни <noscript>-пиксель.
-$metrikaId = trim((string) cfg('analytics.metrika_id', ''));
+// Публичный номер хранится в настройках; локальная копия не отправляет визиты.
+$metrikaId = trim((string) brand_setting('metrika_id', cfg('analytics.metrika_id', '')));
+$analyticsHost = strtolower((string) parse_url((string) cfg('app.base_url'), PHP_URL_HOST));
+if (!in_array($analyticsHost, (array) brand_setting('analytics_hosts', []), true)) {
+    $metrikaId = '';
+}
 
 ?><!DOCTYPE html>
 <html lang="ru">
@@ -168,11 +170,13 @@ $metrikaId = trim((string) cfg('analytics.metrika_id', ''));
              случайный мусор в конфиге, иначе в JS уехал бы синтаксически битый вызов. */ ?>
     ym(<?= ctype_digit($metrikaId) ? $metrikaId : json_encode($metrikaId) ?>, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
 </script>
-<noscript><div><img src="https://mc.yandex.ru/watch/<?= e($metrikaId) ?>" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <!-- /Yandex.Metrika counter -->
 <?php endif; ?>
 </head>
 <body>
+<?php if ($metrikaId !== ''): ?>
+<noscript><div><img src="https://mc.yandex.ru/watch/<?= e($metrikaId) ?>" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<?php endif; ?>
 <?php require __DIR__ . '/../partials/icons.php'; ?>
 <?php require __DIR__ . '/../partials/header.php'; ?>
 
