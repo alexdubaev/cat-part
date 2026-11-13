@@ -129,6 +129,7 @@ final class CatalogController extends Controller
         $filters = array_filter(['stock' => $stock, 'q' => $query, 'sort' => $sort === 'default' ? '' : $sort], static fn ($v) => $v !== '');
         $suffix = $filters ? '?' . http_build_query($filters) : '';
         $h1 = $context !== null ? (string) (($context['seo_h1'] ?? '') ?: $context['name']) : 'Каталог запчастей Caterpillar';
+        if($context===null)$h1=(string)(cms_meta('/catalog')['seo_h1']??$h1);
         $trail = $category !== null ? Category::trail($category) : [];
         $crumbs = $category !== null || $brand !== null ? [['name' => 'Каталог', 'url' => '/catalog']] : [];
         if ($brand !== null) $crumbs[] = ['name' => $brand['name']];

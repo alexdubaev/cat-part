@@ -140,7 +140,7 @@ foreach ($attributes as $a) {
             <div class="cp-buy">
                 <div class="cp-buy__price">
                     <span class="cp-buy__val"><?= e(money($product['price'] ?? null, (string) ($product['currency'] ?? 'RUB'))) ?></span>
-                    <span class="cp-buy__hint">Цена зависит от объёма и срока — назовём после проверки наличия</span>
+                    <span class="cp-buy__hint"><?= e(cms_text('product.price_hint')) ?></span>
                 </div>
                 <div class="cp-buy__act">
                     <a class="cp-btn cp-btn--primary" href="#zayavka">Запросить цену</a>
@@ -153,9 +153,9 @@ foreach ($attributes as $a) {
             </div>
 
             <ul class="cp-usp">
-                <li>Подбор по номеру детали и по модели машины</li>
-                <li>Проверяем применимость по серийному номеру</li>
-                <li>Поставка из наличия и под заказ, доставка по России</li>
+                <li><?= e(cms_text('product.usp_1')) ?></li>
+                <li><?= e(cms_text('product.usp_2')) ?></li>
+                <li><?= e(cms_text('product.usp_3')) ?></li>
             </ul>
         </div>
     </div>
@@ -212,8 +212,7 @@ foreach ($attributes as $a) {
             <h2 class="cp-tabs__h">Доставка и оплата</h2>
             <?php /* Никаких сроков и цен: их нам не называли. Отправляем на страницы,
                      где условия описаны один раз и правятся в одном месте. */ ?>
-            <p class="cp-note">Отправляем транспортными компаниями по всей России, самовывоз
-                по договорённости. Условия и способы оплаты — на отдельных страницах:</p>
+            <p class="cp-note"><?= e(cms_text('product.delivery_copy')) ?></p>
             <p><a class="cp-btn cp-btn--light cp-btn--sm" href="<?= e(url('/dostavka')) ?>">Доставка</a>
                <a class="cp-btn cp-btn--light cp-btn--sm" href="<?= e(url('/oplata')) ?>">Оплата</a>
                <a class="cp-btn cp-btn--light cp-btn--sm" href="<?= e(url('/garantiya')) ?>">Гарантия</a></p>

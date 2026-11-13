@@ -1097,9 +1097,9 @@ h1, h2, h3 { line-height: 1.18; letter-spacing: -.015em; margin: 0; }
 /* ── 15. Cookie-уведомление ───────────────────────────────────────────────── */
 
 .cp-cookie {
-  position: fixed;
-  left: 16px; right: 16px; bottom: 16px;
-  z-index: 60;
+  position: relative;
+  margin: 16px;
+  z-index: 1;
   border-radius: var(--cp-r-lg);
   background: rgba(26, 26, 26, .96);
   backdrop-filter: blur(10px);
@@ -2036,3 +2036,5 @@ a.cp-chip:hover { border-color: var(--cp-orange); color: var(--cp-orange-dk); te
  .cp-catalog .cp-prod__body { padding:10px; }
  .cp-catalog .cp-prod__foot { gap:8px; }
 }
+
+.cp-category-image{display:block;object-fit:contain;max-width:140px;max-height:100px;margin:0 0 20px}

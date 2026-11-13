@@ -307,6 +307,9 @@
     try { stored = localStorage.getItem('cp_cookie_ok'); } catch (e) {}
 
     if (stored !== '1') {
+      // Keep the notice visible in normal flow, so it cannot cover controls.
+      var main = document.getElementById('main');
+      if (main) main.before(cookie);
       cookie.hidden = false;
       requestAnimationFrame(function () { cookie.classList.add('is-shown'); });
 

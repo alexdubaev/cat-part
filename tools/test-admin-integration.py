@@ -9,11 +9,11 @@ def run(command,env):
     if result.returncode:raise RuntimeError('Integration command failed: '+str(command[0])+' '+str(command[-1]))
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--group',action='append',choices=('package','shipping','foundation','catalog','content','requests','browser','seo'));p.add_argument('--runtime',type=Path,default=Path(os.environ.get('CATPART_ADMIN_RUNTIME',ROOT/'local-dev/admin-runtime')));p.add_argument('--package',type=Path);a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--group',action='append',choices=('package','shipping','foundation','catalog','content','requests','browser','seo','acceptance'));p.add_argument('--runtime',type=Path,default=Path(os.environ.get('CATPART_ADMIN_RUNTIME',ROOT/'local-dev/admin-runtime')));p.add_argument('--package',type=Path);a=p.parse_args()
     runtime=a.runtime.resolve();state=json.loads((runtime/'state.json').read_text())
     if not re.fullmatch(r'catpart_admin_[a-f0-9]{12}',state['database']) or not re.fullmatch(r'http://127\.0\.0\.1:[0-9]+',state['origin']):raise RuntimeError('Only an isolated loopback task runtime may be tested.')
     env=os.environ|{'CATPART_ADMIN_RUNTIME':str(runtime),'CATPART_SITE_ROOT':str(ROOT/'local-dev/site'),'CATPART_TEST_DATABASE':state['database'],'CATPART_OC_ROOT':str(runtime/'core')}
-    php=[state['php'],'-c',str(runtime/'php.ini')];groups=a.group or ['package','shipping','foundation','catalog','content','requests','browser','seo']
+    php=[state['php'],'-c',str(runtime/'php.ini')];groups=a.group or ['package','shipping','foundation','catalog','content','requests','browser','seo','acceptance']
     for group in groups:
         print('GROUP '+group,flush=True)
         if group=='package':
@@ -71,6 +71,7 @@ def main():
         elif group=='requests':
             run([*php,str(ROOT/'tests/admin-requests.php')],env);run([sys.executable,str(ROOT/'tools/test-checkout.py')],env)
         elif group=='browser':run(['node',str(ROOT/'tools/test-admin-content.cjs')],env)
+        elif group=='acceptance':run([sys.executable,str(ROOT/'tools/test-admin-acceptance.py')],env)
         elif group=='seo':run([sys.executable,str(ROOT/'tools/test-admin-seo.py')],env)
     print('PASS all selected real integration groups')
 if __name__=='__main__':main()

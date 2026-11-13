@@ -331,6 +331,7 @@ function cms_meta(string $path): array
 {
     $meta=(array)cfg('page_seo',[]);$meta=(array)($meta[$path]??[]);
     foreach(['title','description','seo_h1'] as $key)if(isset($meta[$key]))$meta[$key]=strtr((string)$meta[$key],['{site_name}'=>(string)cfg('site.name'),'{company}'=>(string)cfg('site.company'),'{email}'=>(string)cfg('site.email')]);
+    if(in_array($path,['/catalog','/poisk'],true))foreach(['title','description','seo_h1','canonical'] as $key)if(($meta[$key]??'')==='')unset($meta[$key]);
     return $meta;
 }
 

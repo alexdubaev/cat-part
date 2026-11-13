@@ -669,6 +669,31 @@
       "kind": "image",
       "label": "Преимущества — изображение: Подбор",
       "value": "/assets/img/benefits/selection.webp"
+    },
+    "product.price_hint": {
+      "kind": "text",
+      "label": "Подсказка к цене",
+      "value": "Цена зависит от объёма и срока — назовём после проверки наличия"
+    },
+    "product.usp_1": {
+      "kind": "text",
+      "label": "Преимущество 1",
+      "value": "Подбор по номеру детали и по модели машины"
+    },
+    "product.usp_2": {
+      "kind": "text",
+      "label": "Преимущество 2",
+      "value": "Проверяем применимость по серийному номеру"
+    },
+    "product.usp_3": {
+      "kind": "text",
+      "label": "Преимущество 3",
+      "value": "Поставка из наличия и под заказ, доставка по России"
+    },
+    "product.delivery_copy": {
+      "kind": "text",
+      "label": "Доставка и оплата: пояснение",
+      "value": "Отправляем транспортными компаниями по всей России, самовывоз по договорённости. Условия и способы оплаты — на отдельных страницах:"
     }
   },
   "forms": {
@@ -919,6 +944,22 @@
       "canonical": "/stati",
       "noindex": false,
       "og_image": ""
+    },
+    "/catalog": {
+      "title": "",
+      "description": "",
+      "seo_h1": "",
+      "canonical": "",
+      "og_image": "",
+      "noindex": false
+    },
+    "/poisk": {
+      "title": "",
+      "description": "",
+      "seo_h1": "",
+      "canonical": "",
+      "og_image": "",
+      "noindex": true
     }
   },
   "legal": {

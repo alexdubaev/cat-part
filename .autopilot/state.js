@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "C:/Users/Alexandr/.codex/skills/autopilot",
   "baseCommit": "3f2f046",
   "startedAt": "2026-11-13T11:50:10+03:00",
-  "updatedAt": "2026-11-13T14:56:43+03:00",
+  "updatedAt": "2026-11-13T15:37:36+03:00",
   "finishedAt": null,
   "stages": [
     {
@@ -54,18 +54,20 @@ window.STATE =
     },
     {
       "id": "review",
-      "status": "active",
-      "startedAt": "2026-11-13T14:49:33+03:00"
+      "status": "done",
+      "startedAt": "2026-11-13T14:49:33+03:00",
+      "finishedAt": "2026-11-13T15:09:36+03:00"
     },
     {
       "id": "final",
-      "status": "pending"
+      "status": "active",
+      "startedAt": "2026-11-13T15:09:36+03:00"
     }
   ],
   "requirements": {
     "total": 234,
-    "done": 224,
-    "inTicket": 7,
+    "done": 217,
+    "inTicket": 14,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 2,
@@ -671,6 +673,51 @@ window.STATE =
       "commit": "dc2df30"
     },
     {
+      "id": "E1",
+      "title": "Закрытие функциональных расхождений слепой приёмки",
+      "requirements": [
+        "R011",
+        "R021",
+        "R022",
+        "R029",
+        "R033",
+        "R038",
+        "R040",
+        "R051",
+        "R052",
+        "R054",
+        "R055",
+        "R190",
+        "R192",
+        "R195"
+      ],
+      "blockedBy": [],
+      "wave": 5,
+      "zone": [
+        "opencart/extension/catpart/system",
+        "opencart/extension/catpart/admin",
+        "local-dev/site/app/Views/catalog",
+        "local-dev/site/app/Controllers/CatalogController.php",
+        "local-dev/site/app/Controllers/SearchController.php",
+        "local-dev/site/app/Views/search/index.php",
+        "local-dev/site/app/Support/helpers.php",
+        "local-dev/site/app/Views/layouts/main.php",
+        "local-dev/site/assets/css/site.css",
+        "local-dev/site/assets/js/app.js",
+        "tests/admin-acceptance.php",
+        "tools/test-admin-acceptance.py",
+        "tools/test-admin-acceptance.cjs",
+        "tools/test-admin-integration.py",
+        "docs/admin-guide.md"
+      ],
+      "review": "нет — функциональное закрытие G4, без повторного whole-change code review; реальные narrow closure checks",
+      "model": "сильная",
+      "status": "in-progress",
+      "retries": 0,
+      "repairs": 0,
+      "startedAt": "2026-11-13T15:37:36+03:00"
+    },
+    {
       "id": "F1",
       "title": "Исправление трёх подтверждённых ошибок SEO",
       "requirements": [
@@ -698,14 +745,20 @@ window.STATE =
       ],
       "review": "нет — одно независимое whole-change ревью выполнено; narrow closure checks по owner policy",
       "model": "сильная",
-      "status": "in-progress",
+      "status": "done",
+      "startedAt": "2026-11-13T14:56:43+03:00",
+      "finishedAt": "2026-11-13T15:09:35+03:00",
       "retries": 0,
       "repairs": 0,
-      "startedAt": "2026-11-13T14:56:43+03:00"
+      "tests": {
+        "passed": 47,
+        "failed": 0
+      },
+      "commit": "a5bc99a"
     }
   ],
   "tests": {
-    "passed": 205,
+    "passed": 47,
     "failed": 0
   },
   "debt": {
@@ -721,7 +774,13 @@ window.STATE =
     "items": []
   },
   "concerns": [],
-  "blind": null,
+  "blind": {
+    "checked": 235,
+    "matched": 224,
+    "mismatches": [
+      "G4 local gaps: copy/categoryimage/crosssearch/nativeRussian/rootSEO/fieldErrors/pickers/cookie/log; source-map ownerdoc now surfaced"
+    ]
+  },
   "beats": [
     "2026-11-13T11:50:10+03:00",
     "2026-11-13T11:51:46+03:00",
@@ -761,9 +820,14 @@ window.STATE =
     "2026-11-13T14:49:32+03:00",
     "2026-11-13T14:49:33+03:00",
     "2026-11-13T14:56:42+03:00",
-    "2026-11-13T14:56:43+03:00"
+    "2026-11-13T14:56:43+03:00",
+    "2026-11-13T15:09:35+03:00",
+    "2026-11-13T15:09:36+03:00",
+    "2026-11-13T15:37:34+03:00",
+    "2026-11-13T15:37:35+03:00",
+    "2026-11-13T15:37:36+03:00"
   ],
-  "rev": 41,
+  "rev": 47,
   "waiting": null,
   "waits": [
     {
@@ -1048,6 +1112,52 @@ window.STATE =
         "F1"
       ],
       "act": "start"
+    },
+    {
+      "t": "2026-11-13T15:09:35+03:00",
+      "k": "ticket",
+      "ids": [
+        "F1"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 47,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-13T15:09:36+03:00",
+      "k": "stage",
+      "id": "final",
+      "act": "start"
+    },
+    {
+      "t": "2026-11-13T15:37:34+03:00",
+      "k": "gate",
+      "g": "G4",
+      "ok": false,
+      "checked": 235,
+      "matched": 224
+    },
+    {
+      "t": "2026-11-13T15:37:35+03:00",
+      "k": "tickets",
+      "n": 7
+    },
+    {
+      "t": "2026-11-13T15:37:35+03:00",
+      "k": "gate",
+      "g": "G3",
+      "ok": true,
+      "problems": 0
+    },
+    {
+      "t": "2026-11-13T15:37:36+03:00",
+      "k": "ticket",
+      "ids": [
+        "E1"
+      ],
+      "act": "start"
     }
   ],
   "reqList": [
@@ -1105,7 +1215,7 @@ window.STATE =
     {
       "id": "R011",
       "text": "«До реализации составить короткую таблицу: сущность → источник данных → редактор → потребители на витрине.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R012",
@@ -1155,12 +1265,12 @@ window.STATE =
     {
       "id": "R021",
       "text": "«| Обслуживание | Почта, журнал ошибок, импорт, технические инструменты |»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R022",
       "text": "«Русские понятные названия и оформление CatPart.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R023",
@@ -1195,7 +1305,7 @@ window.STATE =
     {
       "id": "R029",
       "text": "«Все бизнесовые данные и содержимое сайта должны управляться из админки.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R030",
@@ -1215,7 +1325,7 @@ window.STATE =
     {
       "id": "R033",
       "text": "«| Каталог | Товары, категории, бренды, характеристики, изображения, SEO |»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R034",
@@ -1240,7 +1350,7 @@ window.STATE =
     {
       "id": "R038",
       "text": "«| Поисковое представление | Title, description, H1, canonical, индексация, изображения ссылок |»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R039",
@@ -1250,7 +1360,7 @@ window.STATE =
     {
       "id": "R040",
       "text": "«В коде могут оставаться шаблоны компонентов, правила валидации и системные сообщения локализации. Контакты, условия поставки, рекламные тексты и другое содержимое бизнеса не должны быть разбросаны по шаблонам.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R041",
@@ -1300,17 +1410,17 @@ window.STATE =
     {
       "id": "R050",
       "text": "«slug, SEO-поля, публикацию и архивирование.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R051",
       "text": "«Артикулы хранить строками: сохранять ведущие нули, дефисы и исходное написание. Правила поиска и сопоставления должны быть едиными для сайта, админки и импорта.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R052",
       "text": "«Категории должны поддерживать иерархию, описание, изображение, порядок, публикацию и SEO. Товары дочерних категорий должны корректно отображаться в соответствующих родительских разделах.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R053",
@@ -1320,12 +1430,12 @@ window.STATE =
     {
       "id": "R054",
       "text": "«Изменение через любой разрешённый редактор отражается на витрине.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R055",
       "text": "«Импорт не создаёт дубликаты существующих записей.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R056",
@@ -1440,7 +1550,7 @@ window.STATE =
     {
       "id": "R078",
       "text": "«slug, title, description, изображение для публикации ссылки;»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R079",
@@ -1916,27 +2026,27 @@ window.STATE =
     {
       "id": "R173",
       "text": "«проверять занятость и зарезервированные маршруты;»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R174",
       "text": "«требовать явного подтверждения;»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R175",
       "text": "«создавать прямой 301 со старого адреса;»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R176",
       "text": "«исключать циклы и длинные цепочки перенаправлений.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R177",
       "text": "«SEO-поля должны реально выводиться в HTML. Sitemap включает только опубликованные доступные страницы. Структурированные данные должны соответствовать содержимому и фактическим ценам.»",
-      "status": "in-ticket"
+      "status": "done"
     },
     {
       "id": "R178",
@@ -2002,7 +2112,7 @@ window.STATE =
     {
       "id": "R190",
       "text": "«Ошибки находятся возле соответствующих полей; введённые данные сохраняются.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R191",
@@ -2012,7 +2122,7 @@ window.STATE =
     {
       "id": "R192",
       "text": "«Фиксированные панели не закрывают кнопки, сообщения и поля.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R193",
@@ -2027,7 +2137,7 @@ window.STATE =
     {
       "id": "R195",
       "text": "«Админка остаётся пригодной для работы с длинными названиями и большим каталогом.»",
-      "status": "done"
+      "status": "in-ticket"
     },
     {
       "id": "R196",
@@ -2241,8 +2351,14 @@ window.STATE =
     },
     "G3": {
       "ok": true,
-      "at": "2026-11-13T14:56:43+03:00",
+      "at": "2026-11-13T15:37:35+03:00",
       "problems": 0
+    },
+    "G4": {
+      "ok": false,
+      "at": "2026-11-13T15:37:34+03:00",
+      "checked": 235,
+      "matched": 224
     }
   },
   "result": null

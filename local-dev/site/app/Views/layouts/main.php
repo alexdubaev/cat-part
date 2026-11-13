@@ -18,6 +18,8 @@ $P = is_array($page ?? null) ? $page : [];
 foreach(headers_list() as $responseHeader)if(str_starts_with(strtolower($responseHeader),'x-robots-tag:')&&str_contains(strtolower($responseHeader),'noindex'))$P['noindex']=true;
 $managedMeta = cms_meta((string)parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
 $P = array_replace($P, $managedMeta);
+// Preserve mandatory search/filter noindex even when ordinary page metadata changes.
+foreach(headers_list() as $responseHeader)if(str_starts_with(strtolower($responseHeader),'x-robots-tag:')&&str_contains(strtolower($responseHeader),'noindex'))$P['noindex']=true;
 if(!empty($P['noindex']))header('X-Robots-Tag: noindex, follow');
 
 $title  = trim((string) ($P['title'] ?? '')) ?: (string) cfg('site.name');

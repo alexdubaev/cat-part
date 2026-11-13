@@ -35,14 +35,14 @@ final class Catalog
     public function listing(string $type,string $query='',int $page=1):array
     {
         $table=$this->table($type);$where='';$args=[];
-        if($query!==''){$where=$type==='product'?' WHERE (name LIKE ? OR sku_norm=?)':' WHERE name LIKE ?';$args=['%'.$query.'%'];if($type==='product')$args[]=self::normalizeSku($query);}
+        if($query!==''){$where=$type==='product'?' WHERE (name LIKE ? OR sku_norm=? OR EXISTS(SELECT 1 FROM product_cross c WHERE c.product_id=products.id AND c.cross_sku_norm=?))':' WHERE name LIKE ?';$args=['%'.$query.'%'];if($type==='product'){$args[]=self::normalizeSku($query);$args[]=self::normalizeSku($query);}}
         $q=$this->pdo->prepare('SELECT COUNT(*) FROM '.$table.$where);$q->execute($args);$count=(int)$q->fetchColumn();
         $q=$this->pdo->prepare('SELECT * FROM '.$table.$where.' ORDER BY id DESC LIMIT 40 OFFSET '.((max(1,$page)-1)*40));$q->execute($args);
         return ['rows'=>$q->fetchAll(),'total'=>$count,'pages'=>max(1,(int)ceil($count/40))];
     }
     public function choices(string $type):array
     {
-        return $this->pdo->query('SELECT id,name FROM '.$this->table($type).' ORDER BY name,id')->fetchAll();
+        return $this->pdo->query('SELECT id,name'.($type==='product'?',sku':'').' FROM '.$this->table($type).' ORDER BY name,id')->fetchAll();
     }
     public function record(string $type,int $id):?array
     {
@@ -76,24 +76,24 @@ final class Catalog
             $fields=['name'=>$name,'slug'=>$slug,'is_active'=>$status==='published'?1:0];
             foreach(['seo_h1'=>255,'seo_title'=>255,'seo_description'=>500] as $field=>$max)$fields[$field]=CatalogSafety::text($v[$field]??'',$max,$field);
             $meta=self::metadata($this->pdo,$type,$id);$meta['status']=$status;
-            $meta['canonical']=CatalogSafety::url((string)($v['canonical']??''));$meta['noindex']=!empty($v['noindex']);$meta['og_image']=CatalogSafety::image((string)($v['og_image']??''));
+            $meta['canonical']=CatalogSafety::url((string)($v['canonical']??''));$meta['noindex']=!empty($v['noindex']);$meta['og_image']=$this->validated('og_image',fn()=>CatalogSafety::image((string)($v['og_image']??'')));
             if($type==='product'){
                 $fields['sku']=CatalogSafety::text($v['sku']??'',120,'Артикул',true);$fields['sku_norm']=self::normalizeSku($fields['sku']);
-                $fields['category_id']=$this->reference('category',$v['category_id']??null);$fields['brand_id']=$this->reference('brand',$v['brand_id']??null);
+                $fields['category_id']=$this->reference('category',$v['category_id']??null,'category_id');$fields['brand_id']=$this->reference('brand',$v['brand_id']??null,'brand_id');
                 $priceMode=(string)($v['price_mode']??'request');if(!in_array($priceMode,['request','fixed'],true))throw new InvalidArgumentException('Цена: выберите режим.');
                 $price=trim((string)($v['price']??''));if($priceMode==='fixed' && (!preg_match('/^\d{1,10}(?:[.,]\d{1,2})?$/D',$price) || (float)str_replace(',','.',$price)<=0))throw new InvalidArgumentException('Цена: укажите положительное число, до двух знаков после запятой.');
                 $fields['price']=$priceMode==='request'?null:str_replace(',','.',$price);$fields['currency']=strtoupper((string)($v['currency']??'RUB'));
                 if(!preg_match('/^[A-Z]{3}$/D',$fields['currency']))throw new InvalidArgumentException('Валюта: требуется код из трёх букв.');
-                $fields['in_stock']=!empty($v['in_stock'])?1:0;$fields['body_html']=CatalogSafety::html((string)($v['body_html']??''));$fields['image_url']=CatalogSafety::image((string)($v['image_url']??''));
+                $fields['in_stock']=!empty($v['in_stock'])?1:0;$fields['body_html']=CatalogSafety::html((string)($v['body_html']??''));$fields['image_url']=$this->validated('image_url',fn()=>CatalogSafety::image((string)($v['image_url']??'')));
                 $fields['seo_keywords']=CatalogSafety::text($v['seo_keywords']??'',500,'SEO keywords');
                 $meta['price_mode']=$priceMode;$meta['short_description']=CatalogSafety::text($v['short_description']??'',2000,'Краткое описание');$meta['delivery_terms']=CatalogSafety::text($v['delivery_terms']??'',2000,'Условия поставки');
             } else {
                 $fields['intro_html']=CatalogSafety::html((string)($v['intro_html']??''));$fields['sort']=$this->integer($v['sort']??100,-100000,100000,'Порядок');
                 if($type==='category'){
-                    $parent=$this->reference('category',$v['parent_id']??null);if($parent===$id && $id)throw new InvalidArgumentException('Родитель: категория не может входить сама в себя.');
+                    $parent=$this->reference('category',$v['parent_id']??null,'parent_id');if($parent===$id && $id)throw new InvalidArgumentException('Родитель: категория не может входить сама в себя.');
                     if($parent && $old){$p=$this->record('category',$parent);if(str_starts_with($p['path'],$old['path']))throw new InvalidArgumentException('Родитель: перемещение создаёт цикл категорий.');}
-                    $fields['parent_id']=$parent;$fields['image_url']=CatalogSafety::image((string)($v['image_url']??''));$fields['seo_keywords']=CatalogSafety::text($v['seo_keywords']??'',500,'SEO keywords');
-                }else{$fields['is_oem']=!empty($v['is_oem'])?1:0;$meta['logo_url']=CatalogSafety::image((string)($v['logo_url']??''));}
+                    $fields['parent_id']=$parent;$fields['image_url']=$this->validated('image_url',fn()=>CatalogSafety::image((string)($v['image_url']??'')));$fields['seo_keywords']=CatalogSafety::text($v['seo_keywords']??'',500,'SEO keywords');
+                }else{$fields['is_oem']=!empty($v['is_oem'])?1:0;$meta['logo_url']=$this->validated('logo_url',fn()=>CatalogSafety::image((string)($v['logo_url']??'')));}
             }
             $newId=$this->write($this->table($type),$id,$fields);
             if($type==='category')$this->moveCategory($newId,$fields['parent_id'],$old);
@@ -127,23 +127,25 @@ final class Catalog
         $q=$this->pdo->prepare('SELECT id FROM attributes WHERE code=? AND id<>?');$q->execute([$code,$id]);if($q->fetchColumn())throw new InvalidArgumentException('Код характеристики уже занят.');
         $id=$this->write('attributes',$id,['name'=>$name,'code'=>$code,'unit'=>CatalogSafety::text($v['unit']??'',40,'Единица'),'type'=>$type,'sort'=>$this->integer($v['sort']??100,-100000,100000,'Порядок'),'is_filterable'=>!empty($v['is_filterable'])?1:0]);Factory::audit($this->pdo,$actor,'attribute',(string)$id,'save');return $id;
     }
+    private function validated(string $field,callable $run):mixed{try{return $run();}catch(InvalidArgumentException $e){throw new CatalogFieldError($field,$e->getMessage());}}
     private function saveProductRelations(int $id,array $input,array $v):void
     {
+        $group='category_ids[]';try{
         if(array_key_exists('category_ids',$input)){
-            $this->pdo->prepare('DELETE FROM cp_product_category WHERE product_id=?')->execute([$id]);foreach($this->ids($input['category_ids']) as $cat){$this->reference('category',$cat);$this->pdo->prepare('INSERT INTO cp_product_category VALUES(?,?)')->execute([$id,$cat]);}
+            $this->pdo->prepare('DELETE FROM cp_product_category WHERE product_id=?')->execute([$id]);foreach($this->ids($input['category_ids']) as $cat){$this->reference('category',$cat,'category_ids[]');$this->pdo->prepare('INSERT INTO cp_product_category VALUES(?,?)')->execute([$id,$cat]);}
         }
-        foreach(['related_ids'=>'related','analog_ids'=>'analog'] as $key=>$kind)if(array_key_exists($key,$input)){
-            $this->pdo->prepare('DELETE FROM cp_product_relation WHERE product_id=? AND kind=?')->execute([$id,$kind]);foreach($this->ids($input[$key]) as $other){if($other===$id)throw new InvalidArgumentException('Связанный товар не может ссылаться на себя.');$this->reference('product',$other);$this->pdo->prepare('INSERT INTO cp_product_relation VALUES(?,?,?)')->execute([$id,$other,$kind]);}
+        foreach(['related_ids'=>'related','analog_ids'=>'analog'] as $key=>$kind)if(array_key_exists($key,$input)){$group=$key.'[]';
+            $this->pdo->prepare('DELETE FROM cp_product_relation WHERE product_id=? AND kind=?')->execute([$id,$kind]);foreach($this->ids($input[$key]) as $other){if($other===$id)throw new InvalidArgumentException('Связанный товар не может ссылаться на себя.');$this->reference('product',$other,$key.'[]');$this->pdo->prepare('INSERT INTO cp_product_relation VALUES(?,?,?)')->execute([$id,$other,$kind]);}
         }
-        if(array_key_exists('cross',$input)){
+        $group='cross';if(array_key_exists('cross',$input)){
             $this->pdo->prepare('DELETE FROM product_cross WHERE product_id=?')->execute([$id]);$seen=[];
             foreach((array)$input['cross'] as $r){$sku=CatalogSafety::text($r['cross_sku']??'',120,'Кросс-номер');if($sku==='')continue;$kind=$r['kind']??'analog';if(!in_array($kind,['oem','analog','replaced_by','replaces'],true))throw new InvalidArgumentException('Тип кросс-номера неизвестен.');$norm=self::normalizeSku($sku);if(isset($seen[$norm]))continue;$seen[$norm]=true;$this->pdo->prepare('INSERT INTO product_cross(product_id,cross_sku,cross_sku_norm,brand_name,kind) VALUES(?,?,?,?,?)')->execute([$id,$sku,$norm,CatalogSafety::text($r['brand_name']??'',120,'Бренд кросса'),$kind]);}
         }
-        if(array_key_exists('attributes',$input)){
+        $group='attributes';if(array_key_exists('attributes',$input)){
             $this->pdo->prepare('DELETE FROM product_attr_values WHERE product_id=?')->execute([$id]);$seen=[];
-            foreach((array)$input['attributes'] as $r){$aid=(int)($r['attribute_id']??0);if(!$aid)continue;if(isset($seen[$aid]))throw new InvalidArgumentException('Характеристика указана дважды.');$seen[$aid]=true;$this->reference('attribute',$aid);$value=CatalogSafety::text($r['value_str']??'',255,'Значение характеристики');$this->pdo->prepare('INSERT INTO product_attr_values(product_id,attribute_id,value_str) VALUES(?,?,?)')->execute([$id,$aid,$value]);}
+            foreach((array)$input['attributes'] as $r){$aid=(int)($r['attribute_id']??0);if(!$aid)continue;if(isset($seen[$aid]))throw new InvalidArgumentException('Характеристика указана дважды.');$seen[$aid]=true;$this->reference('attribute',$aid,'attributes');$value=CatalogSafety::text($r['value_str']??'',255,'Значение характеристики');$this->pdo->prepare('INSERT INTO product_attr_values(product_id,attribute_id,value_str) VALUES(?,?,?)')->execute([$id,$aid,$value]);}
         }
-        if(array_key_exists('images',$input)){
+        $group='images';if(array_key_exists('images',$input)){
             $oldIds=array_column($this->rows('SELECT id FROM product_images WHERE product_id=?',[$id]),'id');
             if($oldIds)$this->pdo->exec('DELETE FROM cp_image_caption WHERE image_id IN('.implode(',',array_map('intval',$oldIds)).')');
             $this->pdo->prepare('DELETE FROM product_images WHERE product_id=?')->execute([$id]);$rows=[];
@@ -154,6 +156,7 @@ final class Catalog
             $url=(string)($v['image_url']??'');$this->pdo->prepare('UPDATE product_images SET is_primary=0 WHERE product_id=?')->execute([$id]);
             if($url!==''){$q=$this->pdo->prepare('SELECT id FROM product_images WHERE product_id=? AND url=? LIMIT 1');$q->execute([$id,$url]);$found=$q->fetchColumn();if($found)$this->pdo->prepare('UPDATE product_images SET is_primary=1 WHERE id=?')->execute([$found]);else $this->pdo->prepare('INSERT INTO product_images(product_id,url,alt,is_primary,sort) VALUES(?,?,?,1,0)')->execute([$id,$url,$v['name']??'']);}
         }
+        }catch(CatalogFieldError $e){throw $e;}catch(InvalidArgumentException $e){throw new CatalogFieldError($group,$e->getMessage());}
     }
     private function moveCategory(int $id,?int $parent,?array $old):void
     {
@@ -171,11 +174,11 @@ final class Catalog
     {
         $this->pdo->prepare('DELETE FROM cp_redirect WHERE old_path=?')->execute([$new]);$this->pdo->prepare('UPDATE cp_redirect SET new_path=? WHERE new_path=?')->execute([$new,$old]);$this->pdo->prepare('INSERT INTO cp_redirect(old_path,new_path) VALUES(?,?) ON DUPLICATE KEY UPDATE new_path=VALUES(new_path)')->execute([$old,$new]);
     }
-    private function reference(string $type,mixed $id):?int
+    private function reference(string $type,mixed $id,string $field=''):?int
     {
         if($id===null || $id==='' || $id==='0' || $id===0)return null;
-        if(!is_scalar($id) || !ctype_digit((string)$id) || (int)$id<1)throw new InvalidArgumentException('Связь: выберите существующую запись.');
-        $q=$this->pdo->prepare('SELECT id FROM '.$this->table($type).' WHERE id=?');$q->execute([(int)$id]);if(!$q->fetchColumn())throw new InvalidArgumentException('Связанная запись не найдена: '.$type.'.');return (int)$id;
+        if(!is_scalar($id) || !ctype_digit((string)$id) || (int)$id<1)throw new CatalogFieldError($field,'Связь: выберите существующую запись.');
+        $q=$this->pdo->prepare('SELECT id FROM '.$this->table($type).' WHERE id=?');$q->execute([(int)$id]);if(!$q->fetchColumn())throw new CatalogFieldError($field,'Связанная запись не найдена: '.$type.'.');return (int)$id;
     }
     private function ids(mixed $values):array
     {
