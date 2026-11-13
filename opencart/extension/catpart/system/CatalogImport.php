@@ -140,6 +140,8 @@ final class CatalogImport
         $slug=trim((string)($input['slug']??''));if($slug==='')$slug=trim(preg_replace('/[^\p{L}\p{N}]+/u','-',mb_strtolower(($input['sku']??'').'-'.($input['name']??'')))??'','-');
         if(mb_strlen($slug)>180 || !preg_match('/^[\p{L}\p{N}][\p{L}\p{N}_-]*$/uD',$slug) || in_array(mb_strtolower($slug),['admin','catalog','poisk','korzina','stati','robots','sitemap','api','index'],true))throw new InvalidArgumentException('Адрес: недопустимый или зарезервированный slug.');
         $q=$this->pdo->prepare('SELECT id FROM products WHERE slug=? AND id<>?');$q->execute([$slug,(int)($input['id']??0)]);if($q->fetchColumn())throw new InvalidArgumentException('Адрес уже занят другим товаром.');
+        $q=$this->pdo->prepare('SELECT slug FROM products WHERE id=?');$q->execute([(int)($input['id']??0)]);$currentSlug=$q->fetchColumn();
+        Catalog::assertHistoricalPath($this->pdo,'/tovar/'.$slug,$currentSlug!==false?'/tovar/'.$currentSlug:null);
         foreach(['category_id'=>'categories','brand_id'=>'brands'] as $key=>$table)if(!empty($input[$key])){$q=$this->pdo->prepare('SELECT id FROM '.$table.' WHERE id=?');$q->execute([(int)$input[$key]]);if(!$q->fetchColumn())throw new InvalidArgumentException('Связанная категория или бренд не найдены.');}
         foreach($input['cross']??[] as $row)CatalogSafety::text($row['cross_sku']??'',120,'Кросс-номер',true);
         if(isset($input['price']) && ($input['price_mode']??'request')==='fixed' && (!preg_match('/^\d{1,10}(?:[.,]\d{1,2})?$/D',(string)$input['price'])||(float)str_replace(',','.',(string)$input['price'])<=0))throw new InvalidArgumentException('Цена: требуется положительное число до двух знаков после запятой.');

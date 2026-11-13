@@ -26,6 +26,12 @@ final class Catalog
     {
         return mb_strtoupper(preg_replace('/[\s\-\._]+/u','',trim($sku))??'','UTF-8');
     }
+    /** Historical paths stay reserved; only their current owner can rename back. */
+    public static function assertHistoricalPath(PDO $pdo,string $path,?string $currentPath=null):void
+    {
+        $q=$pdo->prepare('SELECT new_path FROM cp_redirect WHERE old_path=? FOR UPDATE');$q->execute([$path]);$target=$q->fetchColumn();
+        if($target!==false && ($currentPath===null || $target!==$currentPath))throw new InvalidArgumentException('Адрес занят историческим перенаправлением другой записи.');
+    }
     public function listing(string $type,string $query='',int $page=1):array
     {
         $table=$this->table($type);$where='';$args=[];
@@ -63,6 +69,8 @@ final class Catalog
             $slug=CatalogSafety::text($v['slug']??'',180,'Адрес');if($slug==='')$slug=trim(preg_replace('/[^\p{L}\p{N}]+/u','-',mb_strtolower(($v['sku']??'').'-'.$name))??'','-');
             if(!preg_match('/^[\p{L}\p{N}][\p{L}\p{N}_-]*$/uD',$slug) || in_array(mb_strtolower($slug),['admin','catalog','poisk','korzina','stati','robots','sitemap','api','index'],true))throw new InvalidArgumentException('Адрес: недопустимый или зарезервированный slug.');
             $q=$this->pdo->prepare('SELECT id FROM '.$this->table($type).' WHERE slug=? AND id<>?');$q->execute([$slug,$id]);if($q->fetchColumn())throw new InvalidArgumentException('Адрес уже занят другой записью.');
+            $prefix=match($type){'product'=>'/tovar/','brand'=>'/brand/',default=>'/catalog/'};
+            self::assertHistoricalPath($this->pdo,$prefix.$slug,$old?$prefix.$old['slug']:null);
             if($old && $old['slug']!==$slug && !$confirmSlug)throw new InvalidArgumentException('Адрес изменён: подтвердите смену и создание перенаправления.');
             $status=(string)($v['status']??'draft');if(!in_array($status,['draft','published','archived'],true))throw new InvalidArgumentException('Публикация: неизвестное состояние.');
             $fields=['name'=>$name,'slug'=>$slug,'is_active'=>$status==='published'?1:0];

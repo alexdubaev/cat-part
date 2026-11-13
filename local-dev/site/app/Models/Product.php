@@ -302,6 +302,15 @@ final class Product
         return (int) ($row['c'] ?? 0);
     }
 
+    /** MariaDB returns JSON booleans as true/false, not numeric 1/0. */
+    private const INDEXABLE = "p.is_active=1 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(m.data,'$.noindex')),'false') NOT IN ('true','1')";
+
+    public static function countIndexable(): int
+    {
+        $row = App::db()->fetch("SELECT COUNT(*) AS c FROM products p LEFT JOIN cp_catalog_meta m ON m.entity='product' AND m.entity_id=p.id WHERE " . self::INDEXABLE);
+        return (int) ($row['c'] ?? 0);
+    }
+
     /** Filtered catalog; all user values are bound and sort expressions are allowlisted. */
     public static function catalogListing(?string $prefix, string $stock, string $query, string $sort, int $limit, int $offset, ?int $brandId = null): array
     {
@@ -365,7 +374,7 @@ final class Product
     public static function slugChunk(int $limit, int $offset): array
     {
         return App::db()->fetchAll(
-            'SELECT p.slug, p.updated_at FROM products p LEFT JOIN cp_catalog_meta m ON m.entity=\'product\' AND m.entity_id=p.id WHERE p.is_active = 1 AND COALESCE(JSON_EXTRACT(m.data,\'$.noindex\'),0)<>1 ORDER BY p.id LIMIT :lim OFFSET :off',
+            "SELECT p.slug, p.updated_at FROM products p LEFT JOIN cp_catalog_meta m ON m.entity='product' AND m.entity_id=p.id WHERE " . self::INDEXABLE . ' ORDER BY p.id LIMIT :lim OFFSET :off',
             ['lim' => $limit, 'off' => $offset]
         );
     }

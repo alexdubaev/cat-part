@@ -19,8 +19,13 @@ use App\Core\Router;
  * (см. Router::dispatch).
  */
 return static function (Router $r): void {
-    $requestPath = (string)parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-    if (in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET','HEAD'], true)) {
+    $rawPath = (string)parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    // Match Router's single decode and slash trim, without treating encoded separators
+    // or traversal/control bytes as aliases of a safe historical catalog path.
+    $requestPath = '/' . trim(rawurldecode($rawPath), '/');
+    $safePath = !preg_match('~%(?:2f|5c|00)|[\\\\\x00-\x20\x7f]~i', $rawPath)
+        && !preg_match('~[\\\\\x00-\x20\x7f]|(?:^|/)\.{1,2}(?:/|$)~', $requestPath);
+    if ($safePath && in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET','HEAD'], true)) {
         $redirect = \App\Core\App::db()->fetch('SELECT new_path FROM cp_redirect WHERE old_path=?', [$requestPath]);
         if ($redirect && $redirect['new_path'] !== $requestPath && str_starts_with((string)$redirect['new_path'],'/') && !str_starts_with((string)$redirect['new_path'],'//')) {
             header('Location: '.url((string)$redirect['new_path']), true, 301); exit;

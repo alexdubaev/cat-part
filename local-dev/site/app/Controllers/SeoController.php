@@ -204,7 +204,7 @@ final class SeoController extends Controller
         if (!method_exists(CatalogController::class, 'product')) {
             return 0;
         }
-        return (int) ceil(Product::countActive() / self::CHUNK);
+        return (int) ceil(Product::countIndexable() / self::CHUNK);
     }
 
     private function xmlHeader(): void
