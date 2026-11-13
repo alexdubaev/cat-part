@@ -1,10 +1,10 @@
 """Exercise the isolated CatPart OpenCart foundation through native HTTP sessions."""
-import argparse, html, http.cookiejar, json, re, sys, urllib.parse, urllib.request
+import argparse, html, http.cookiejar, json, os, re, sys, urllib.parse, urllib.request
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 
 def run():
-    runtime=ROOT/'local-dev/admin-runtime'
+    runtime=Path(os.environ.get('CATPART_ADMIN_RUNTIME',ROOT/'local-dev/admin-runtime'))
     state=json.loads((runtime/'state.json').read_text())
     credentials=json.loads((runtime/'private/accounts.json').read_text())
     base=state['origin']

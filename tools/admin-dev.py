@@ -24,6 +24,7 @@ def php_script(state,path,data=None):
 
 def setup(args):
     source=args.source.resolve()
+    if ROOT==source or source in ROOT.parents:raise RuntimeError('The stand must be separate from the read-only source checkout.')
     php=source/'local-dev/bin/php/php.exe'
     if not php.is_file():raise RuntimeError('The supplied source checkout has no ready PHP binary.')
     archive=args.upstream.resolve()
@@ -92,11 +93,16 @@ def setup(args):
     start(state)
 
 def start(state):
+    ready=False
     try:
         with urllib.request.urlopen(state['origin']+'/admin/index.php?route=common/login',timeout=2) as r:
-            if r.status==200 and b'form-login' in r.read():
-                print('Ready:',state['origin']);return
+            ready=r.status==200 and b'form-login' in r.read()
     except Exception:pass
+    if ready:
+        pid_file=RUNTIME/'server.pid'
+        if not pid_file.is_file():raise RuntimeError('Port is occupied without an owned task PID; refusing reuse.')
+        verify_process(state,int(pid_file.read_text()))
+        print('Ready:',state['origin']);return
     out=(RUNTIME/'private/server.log').open('ab')
     command=[*php_command(state),'-S','127.0.0.1:'+str(state['port']),'-t',str(ROOT/'local-dev/site'),str(ROOT/'local-dev/router.php')]
     options={'creationflags':subprocess.CREATE_NO_WINDOW} if os.name=='nt' else {'start_new_session':True}
@@ -111,16 +117,13 @@ def start(state):
         except Exception:pass
     raise RuntimeError('Local server did not become ready; inspect private logs.')
 
-def stop(state):
-    pid_file=RUNTIME/'server.pid'
-    if not pid_file.is_file():return
-    pid=int(pid_file.read_text())
+def verify_process(state,pid):
     if os.name=='nt':
         command=f'Get-CimInstance Win32_Process -Filter "ProcessId={pid}" | Select-Object ExecutablePath,CommandLine | ConvertTo-Json -Compress'
         result=subprocess.run([shutil.which('pwsh') or 'powershell','-NoProfile','-Command',command],capture_output=True,text=True,creationflags=subprocess.CREATE_NO_WINDOW)
         if result.returncode:raise RuntimeError('Cannot verify the owned server process.')
         proc=json.loads(result.stdout or 'null')
-        if proc is None:return
+        if proc is None:raise RuntimeError('Owned task PID is no longer running.')
         actual=Path(proc['ExecutablePath']).resolve()
         expected=Path(state['php']).resolve()
         if actual!=expected or str(ROOT/'local-dev/router.php') not in proc['CommandLine']:
@@ -128,6 +131,14 @@ def stop(state):
     else:
         args=Path(f'/proc/{pid}/cmdline').read_bytes().replace(b'\0',b' ').decode()
         if str(ROOT/'local-dev/router.php') not in args:raise RuntimeError('PID does not belong to this task.')
+def stop(state):
+    pid_file=RUNTIME/'server.pid'
+    if not pid_file.is_file():return
+    pid=int(pid_file.read_text())
+    try:verify_process(state,pid)
+    except RuntimeError as error:
+        if str(error)=='Owned task PID is no longer running.':pid_file.unlink(missing_ok=True);return
+        raise
     os.kill(pid,signal.SIGTERM)
     pid_file.unlink(missing_ok=True)
 

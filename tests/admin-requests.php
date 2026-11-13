@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
-require dirname(__DIR__).'/local-dev/admin-runtime/core/admin/config.php';
+$runtime=getenv('CATPART_ADMIN_RUNTIME')?:dirname(__DIR__).'/local-dev/admin-runtime';
+require $runtime.'/core/admin/config.php';
 use Catpart\{Factory,Requests,Outbox};
 $pdo=Factory::pdo();
 if (!class_exists(Requests::class)) { fwrite(STDERR,"FAIL: checkout has no durable request persistence service\n"); exit(1); }
