@@ -13,7 +13,7 @@ window.STATE =
   "skillDir": "C:/Users/Alexandr/.codex/skills/autopilot",
   "baseCommit": "3f2f046",
   "startedAt": "2026-11-13T11:50:10+03:00",
-  "updatedAt": "2026-11-13T12:57:04+03:00",
+  "updatedAt": "2026-11-13T13:07:18+03:00",
   "finishedAt": null,
   "stages": [
     {
@@ -188,10 +188,16 @@ window.STATE =
       ],
       "review": "нет — один итоговый независимый review по owner policy",
       "model": "сильная",
-      "status": "in-progress",
+      "status": "done",
       "startedAt": "2026-11-13T12:19:56+03:00",
       "retries": 0,
-      "repairs": 0
+      "repairs": 0,
+      "finishedAt": "2026-11-13T13:07:18+03:00",
+      "tests": {
+        "passed": 55,
+        "failed": 0
+      },
+      "commit": "2d7a699"
     },
     {
       "id": "03",
@@ -651,7 +657,7 @@ window.STATE =
     }
   ],
   "tests": {
-    "passed": 36,
+    "passed": 55,
     "failed": 0
   },
   "debt": {
@@ -699,9 +705,10 @@ window.STATE =
     "2026-11-13T12:46:55+03:00",
     "2026-11-13T12:50:11+03:00",
     "2026-11-13T12:50:12+03:00",
-    "2026-11-13T12:57:04+03:00"
+    "2026-11-13T12:57:04+03:00",
+    "2026-11-13T13:07:18+03:00"
   ],
-  "rev": 32,
+  "rev": 33,
   "waiting": null,
   "waits": [
     {
@@ -906,6 +913,18 @@ window.STATE =
       "act": "done",
       "tests": {
         "passed": 36,
+        "failed": 0
+      }
+    },
+    {
+      "t": "2026-11-13T13:07:18+03:00",
+      "k": "ticket",
+      "ids": [
+        "02"
+      ],
+      "act": "done",
+      "tests": {
+        "passed": 55,
         "failed": 0
       }
     }

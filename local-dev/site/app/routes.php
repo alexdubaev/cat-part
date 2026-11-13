@@ -19,12 +19,21 @@ use App\Core\Router;
  * (см. Router::dispatch).
  */
 return static function (Router $r): void {
+    $requestPath = (string)parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    if (in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET','HEAD'], true)) {
+        $redirect = \App\Core\App::db()->fetch('SELECT new_path FROM cp_redirect WHERE old_path=?', [$requestPath]);
+        if ($redirect && $redirect['new_path'] !== $requestPath && str_starts_with((string)$redirect['new_path'],'/') && !str_starts_with((string)$redirect['new_path'],'//')) {
+            header('Location: '.url((string)$redirect['new_path']), true, 301); exit;
+        }
+    }
+
     $r->get('/', [HomeController::class, 'index']);
 
     // ── Каталог ──
     $r->get('/catalog', [CatalogController::class, 'index']);
     $r->get('/catalog/{slug}', [CatalogController::class, 'category']);
     $r->get('/tovar/{slug}', [CatalogController::class, 'product']);
+    $r->get('/brand/{slug}', [CatalogController::class, 'brand']);
     $r->get('/korzina', [CartController::class, 'index']);
     $r->post('/korzina/add', [CartController::class, 'add']);
     $r->post('/korzina/update', [CartController::class, 'update']);

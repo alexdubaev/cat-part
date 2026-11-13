@@ -15,4 +15,5 @@ PHP-сайт каталога запчастей. Рабочая локальн�
 - Для будущих небольших правок сначала читать `.autopilot/PROGRESS.md` и относящиеся к правке требования; не загружать лишние артефакты и не выводить данные/секреты.
 - Git-коммиты делать только с явным перечнем путей. Не добавлять локальные config, секреты, `.sql`, runtime/uploads/DB inputs или тысячи товарных изображений. Инструкция `deliverables/brandbook/mail-deployment.md` требует не копировать local-only config/секреты на production.
 - `CLAUDE.md` указывает на этот файл (`@AGENTS.md`); сохранять этот указатель.
+- Изолированная админка OpenCart4.1.0.4: `tools/admin-dev.py` использует собственную `catpart_admin_[12hex]` БД на loopback и task-only PHP ini (нужны GD/mysqli/PDO); не менять общий PHP ini/службы или source `local_catpart`. Проверенная основа: `python tools/test-admin-foundation.py` и PHP `tests/admin-foundation.php` с ini из собственного runtime. Upstream core держать вне Git и сверять SHA; native неинтегрированные каталоги/заказы блокируются сервером, каталог CatPart остаётся единственным.
 <!-- autopilot:end -->

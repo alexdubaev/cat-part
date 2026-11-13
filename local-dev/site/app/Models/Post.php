@@ -1,128 +1,19 @@
 <?php
-
 declare(strict_types=1);
-
 namespace App\Models;
-
 use App\Core\App;
-
-/**
- * Статьи раздела «Статьи» (таблица blog_posts).
- *
- * Возвращает ассоциативные массивы строк — как Category и Product: вьюхи ждут именно их.
- */
 final class Post
 {
-    /**
-     * Колонки для лент и карточек — контракт с вьюхами (blog/index, home) и с
-     * HomeController. Осознанно НЕ 'SELECT *': в строке лежит body_html (MEDIUMTEXT,
-     * ~6 КБ на статью), и тащить его ради списка из трёх заголовков на главной —
-     * гонять килобайты HTML, которые никто не выведет. Ровно тот же довод, по которому
-     * у Category заведён LIST_COLUMNS.
-     */
-    private const LIST_COLUMNS = 'slug, title, excerpt, image_url, published_at';
-
-    /**
-     * Условие «статья видна публике» — ОДНО определение на весь класс.
-     *
-     * Зачем константой, а не копией в каждом запросе: правило видимости обязано быть
-     * одинаковым в ленте, на странице статьи и в sitemap. Разъедься они хоть на одно
-     * условие — получим либо статью, доступную по прямой ссылке, но отсутствующую в
-     * ленте, либо адрес в карте сайта, который отдаёт роботу 404.
-     *
-     * published_at <= NOW() решает сразу две задачи:
-     *   • отложенная публикация — статья с будущей датой ждёт своего часа сама;
-     *   • черновик без даты отсекается автоматически: в MySQL сравнение NULL <= NOW()
-     *     даёт NULL, то есть «не истина», и строка в выдачу не попадает.
-     * Отдельное `published_at IS NOT NULL` поэтому не нужно.
-     *
-     * Порядок условий совпадает с idx_blog_active_pub (is_active, published_at):
-     * равенство по первой колонке + диапазон по второй — индекс отрабатывает целиком.
-     *
-     * ⚠️ NOW() берёт время СЕРВЕРА MySQL, а PHP живёт в Europe/Moscow (config: app.timezone).
-     * Разъезд часовых поясов сдвинет момент публикации на несколько часов — для статей
-     * это несущественно, но при отложенной публикации «к 10:00» об этом стоит помнить.
-     */
-    private const VISIBLE = 'is_active = 1 AND published_at <= NOW()';
-
-    /**
-     * Свежие статьи: лента раздела и блок из трёх на главной.
-     *
-     * LIMIT привязан параметром, а не вклеен в строку запроса: Database биндит int
-     * как PDO::PARAM_INT, и при EMULATE_PREPARES=false MySQL принимает такой LIMIT
-     * (донор конкатенировал число в SQL именно потому, что не умел биндить тип).
-     *
-     * Второй ключ сортировки id DESC не декоративный: у четырёх стартовых статей
-     * даты разные, но как только две выйдут одним днём, порядок между ними без
-     * второго ключа станет недетерминированным — лента начнёт «прыгать» между хитами.
-     *
-     * @return list<array<string,mixed>>
-     */
-    public static function latest(int $limit = 20): array
+    private const FROM=' FROM blog_posts p LEFT JOIN cp_article a ON a.post_id=p.id';
+    private const VISIBLE="p.is_active=1 AND p.published_at<=UTC_TIMESTAMP() AND COALESCE(a.status,'published') IN ('published','scheduled')";
+    private const COLUMNS="p.*,COALESCE(a.status,'published') status,COALESCE(a.author,'') author,COALESCE(a.seo_h1,'') seo_h1,COALESCE(a.canonical,'') canonical,COALESCE(a.noindex,0) noindex,COALESCE(a.og_image,'') og_image,COALESCE(a.cover_alt,'') cover_alt,COALESCE(a.related_products,'[]') related_products";
+    public static function latest(int $limit=20):array{return App::db()->fetchAll('SELECT '.self::COLUMNS.self::FROM.' WHERE '.self::VISIBLE.' ORDER BY p.published_at DESC,p.id DESC LIMIT :lim',['lim'=>max(1,min(50,$limit))]);}
+    public static function findBySlug(string $slug):?array{return App::db()->fetch('SELECT '.self::COLUMNS.self::FROM.' WHERE p.slug=:slug AND '.self::VISIBLE.' LIMIT 1',['slug'=>$slug]);}
+    public static function others(int $exceptId,int $limit=3):array
     {
-        // Потолок жёсткий: наружу число попадает только из кода, но лимит-страховка
-        // стоит дешевле, чем однажды выбранная целиком таблица.
-        $limit = max(1, min(50, $limit));
-
-        return App::db()->fetchAll(
-            'SELECT ' . self::LIST_COLUMNS . '
-               FROM blog_posts
-              WHERE ' . self::VISIBLE . '
-              ORDER BY published_at DESC, id DESC
-              LIMIT :lim',
-            ['lim' => $limit]
-        );
+        $row=App::db()->fetch('SELECT related_articles FROM cp_article WHERE post_id=:id',['id'=>$exceptId]);$ids=json_decode((string)($row['related_articles']??'[]'),true);
+        if(is_array($ids)&&$ids!==[]){$ids=array_values(array_filter(array_map('intval',$ids),static fn($id)=>$id>0&&$id!==$exceptId));if($ids!==[])return App::db()->fetchAll('SELECT '.self::COLUMNS.self::FROM.' WHERE p.id IN ('.implode(',',$ids).') AND '.self::VISIBLE.' ORDER BY FIELD(p.id,'.implode(',',$ids).') LIMIT :lim',['lim'=>max(1,min(12,$limit))]);}
+        return App::db()->fetchAll('SELECT '.self::COLUMNS.self::FROM.' WHERE p.id<>:id AND '.self::VISIBLE.' ORDER BY p.published_at DESC,p.id DESC LIMIT :lim',['id'=>$exceptId,'lim'=>max(1,min(12,$limit))]);
     }
-
-    /**
-     * Полная строка статьи (нужны id, body_html и seo_*).
-     *
-     * @return array<string,mixed>|null
-     */
-    public static function findBySlug(string $slug): ?array
-    {
-        return App::db()->fetch(
-            'SELECT * FROM blog_posts
-              WHERE slug = :s AND ' . self::VISIBLE . '
-              LIMIT 1',
-            ['s' => $slug]
-        );
-    }
-
-    /**
-     * Другие статьи — для блока «Читайте также» под статьёй.
-     *
-     * @return list<array<string,mixed>>
-     */
-    public static function others(int $exceptId, int $limit = 3): array
-    {
-        $limit = max(1, min(12, $limit));
-
-        return App::db()->fetchAll(
-            'SELECT ' . self::LIST_COLUMNS . '
-               FROM blog_posts
-              WHERE ' . self::VISIBLE . ' AND id <> :id
-              ORDER BY published_at DESC, id DESC
-              LIMIT :lim',
-            ['id' => $exceptId, 'lim' => $limit]
-        );
-    }
-
-    /**
-     * Все опубликованные статьи для sitemap.
-     *
-     * Без LIMIT намеренно: статей десятки, не десятки тысяч — разбивать карту на чанки,
-     * как для товаров, тут не из-за чего. published_at отдаём ради <lastmod>.
-     *
-     * @return list<array<string,mixed>>
-     */
-    public static function allPublished(): array
-    {
-        return App::db()->fetchAll(
-            'SELECT slug, published_at
-               FROM blog_posts
-              WHERE ' . self::VISIBLE . '
-              ORDER BY published_at DESC, id DESC'
-        );
-    }
+    public static function allPublished():array{return App::db()->fetchAll('SELECT p.slug,p.published_at'.self::FROM.' WHERE '.self::VISIBLE.' AND COALESCE(a.noindex,0)=0 ORDER BY p.published_at DESC,p.id DESC');}
 }

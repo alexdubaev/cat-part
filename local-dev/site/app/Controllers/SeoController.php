@@ -124,10 +124,15 @@ final class SeoController extends Controller
             '/kontakty',
             '/politika-konfidencialnosti',
         ];
+        $paths = array_values(array_filter($paths, static fn(string $path):bool=>empty(cms_meta($path)['noindex'])));
         // /poisk сюда НЕ добавлен намеренно: страница поиска отдаёт noindex.
 
         foreach (Category::allActive() as $row) {
             $paths[] = '/catalog/' . (string) $row['slug'];
+        }
+
+        foreach(App::db()->fetchAll("SELECT b.slug,m.data FROM brands b LEFT JOIN cp_catalog_meta m ON m.entity='brand' AND m.entity_id=b.id WHERE b.is_active=1") as $brand) {
+            $brandMeta=json_decode((string)($brand['data']??'{}'),true);if(empty($brandMeta['noindex']))$paths[]='/brand/'.(string)$brand['slug'];
         }
 
         // Статьи берём ТОЛЬКО опубликованные — Post::allPublished() применяет то же
@@ -145,7 +150,7 @@ final class SeoController extends Controller
         // дата для <lastmod>.
         foreach ($posts as $post) {
             echo '  <url><loc>' . $this->loc('/stati/' . (string) $post['slug']) . '</loc>';
-            $lastmod = strtotime((string) ($post['published_at'] ?? ''));
+            $lastmod = (!empty($post['published_at']) ? (new \DateTimeImmutable((string)$post['published_at'],new \DateTimeZone('UTC')))->getTimestamp() : false);
             if ($lastmod !== false) {
                 echo '<lastmod>' . date('Y-m-d', $lastmod) . '</lastmod>';
             }

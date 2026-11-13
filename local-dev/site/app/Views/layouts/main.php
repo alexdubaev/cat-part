@@ -15,6 +15,10 @@ declare(strict_types=1);
  */
 
 $P = is_array($page ?? null) ? $page : [];
+foreach(headers_list() as $responseHeader)if(str_starts_with(strtolower($responseHeader),'x-robots-tag:')&&str_contains(strtolower($responseHeader),'noindex'))$P['noindex']=true;
+$managedMeta = cms_meta((string)parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
+$P = array_replace($P, $managedMeta);
+if(!empty($P['noindex']))header('X-Robots-Tag: noindex, follow');
 
 $title  = trim((string) ($P['title'] ?? '')) ?: (string) cfg('site.name');
 $desc   = trim((string) ($P['description'] ?? ''));
@@ -29,7 +33,7 @@ $canonical = url((string) ($P['canonical'] ?? '/'));
 // доезжает до <meta> ниже. url() отдаёт внешние ссылки как есть, а внутренний
 // путь /assets/... делает абсолютным — og:image по спецификации не принимает
 // относительные пути.
-$ogImage = url(trim((string) ($P['og_image'] ?? '')) ?: asset('img/og-default.jpg'));
+$ogImage = url(trim((string) ($P['og_image'] ?? '')) ?: cfg('site.default_og_image',asset('img/og-default.jpg')));
 
 $phone = trim((string) cfg('site.phone', ''));
 $email = trim((string) brand_setting('email', cfg('site.email', '')));
@@ -54,10 +58,11 @@ if ($email !== '') {
 if ($phone !== '') {
     $store['telephone'] = $phone;
 }
-if ($city !== '') {
+if ($city !== '' || trim((string)cfg('site.address',''))!=='') {
     $store['address'] = [
         '@type'           => 'PostalAddress',
         'addressLocality' => $city,
+        'streetAddress' => cfg('site.address',''),
         'addressCountry'  => 'RU',
     ];
 }
@@ -103,12 +108,9 @@ foreach ((array) ($P['jsonld'] ?? []) as $extra) {
 // и превратила разметку в XSS. Экранированный < для JSON-LD валиден.
 $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG;
 
-// Публичный номер хранится в настройках; локальная копия не отправляет визиты.
-$metrikaId = trim((string) brand_setting('metrika_id', cfg('analytics.metrika_id', '')));
-$analyticsHost = strtolower((string) parse_url((string) cfg('app.base_url'), PHP_URL_HOST));
-if (!in_array($analyticsHost, (array) brand_setting('analytics_hosts', []), true)) {
-    $metrikaId = '';
-}
+$analyticsHost = strtolower((string)parse_url((string)cfg('app.base_url'), PHP_URL_HOST));
+$siteSettings = (array)cfg('site',[]);
+$metrikaId = in_array($analyticsHost, ['cat-part.ru','www.cat-part.ru'], true) ? (string)($siteSettings['metrika_id'] ?? '') : '';
 
 ?><!DOCTYPE html>
 <html lang="ru">
@@ -127,9 +129,9 @@ if (!in_array($analyticsHost, (array) brand_setting('analytics_hosts', []), true
 <meta name="keywords" content="<?= e($kw) ?>">
 <?php endif; ?>
 <link rel="canonical" href="<?= e($canonical) ?>">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="<?= !empty($P['noindex'])?'noindex, follow':'index, follow' ?>">
 <meta name="theme-color" content="#0d0d0d">
-<link rel="icon" href="<?= e(asset('img/favicon.svg')) ?>" type="image/svg+xml">
+<link rel="icon" href="<?= e(cfg('site.favicon',asset('img/favicon.svg'))) ?>">
 <link rel="manifest" href="/manifest.webmanifest">
 <?php /* Файл для ИИ-краулеров: /llms.txt отдаёт SeoController::llms(). Ссылка в head —
          чтобы его находили те, кто читает разметку страницы, а не только корень домена. */ ?>
@@ -156,22 +158,8 @@ if (!in_array($analyticsHost, (array) brand_setting('analytics_hosts', []), true
 <script type="application/ld+json"><?= json_encode($s, $jsonFlags) ?></script>
 <?php endforeach; ?>
 
-<?php if ($metrikaId !== ''): ?>
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=<?= e($metrikaId) ?>', 'ym');
-
-    <?php /* Номер счётчика — числом, как в коде Метрики: ctype_digit отсекает
-             случайный мусор в конфиге, иначе в JS уехал бы синтаксически битый вызов. */ ?>
-    ym(<?= ctype_digit($metrikaId) ? $metrikaId : json_encode($metrikaId) ?>, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
-</script>
-<!-- /Yandex.Metrika counter -->
-<?php endif; ?>
+<?php foreach(['yandex_verification'=>'yandex-verification','google_verification'=>'google-site-verification'] as $key=>$name): if((string)cfg('site.'.$key,'')!==''): ?><meta name="<?= e($name) ?>" content="<?= e(cfg('site.'.$key)) ?>"><?php endif; endforeach; ?>
+<?= \Catpart\Content::analyticsHtml($siteSettings,$analyticsHost) ?>
 </head>
 <body>
 <?php if ($metrikaId !== ''): ?>

@@ -7,6 +7,9 @@ final class Shell extends \Opencart\System\Engine\Controller
 {
     public function route(string &$route,array &$args):void
     {
+        if ($route === 'error/permission') {
+            $this->response->addHeader('HTTP/1.1 403 Forbidden');
+        }
         $requested=(string)($this->request->get['route']??'common/dashboard');
         if (preg_match('~^(catalog|cms|sale|customer|marketing|report|design|marketplace|extension/(?!catpart/))[/]~',$requested)) {
             $this->response->addHeader('HTTP/1.1 403 Forbidden');
@@ -14,8 +17,10 @@ final class Shell extends \Opencart\System\Engine\Controller
             $this->response->output();exit;
         }
         if ($route==='common/dashboard') {
-            $route=is_file(DIR_EXTENSION.'catpart/admin/controller/module/dashboard.php')
-                ?'extension/catpart/module/dashboard':'extension/catpart/module/foundation';
+            foreach(['dashboard','catalog','content','foundation'] as $area){
+                $target='extension/catpart/module/'.$area;
+                if(is_file(DIR_EXTENSION.'catpart/admin/controller/module/'.$area.'.php') && $this->user->hasPermission('access',$target)){$route=$target;break;}
+            }
         }
     }
     public function menu(string &$route,array &$data):void
@@ -34,7 +39,13 @@ final class Shell extends \Opencart\System\Engine\Controller
     }
     public function header(string &$route,array &$data,string &$output):void
     {
+        // Native error/permission adds401 after controller-before hooks. Preserve its
+        // access decision and emit403 after that header has been prepared.
+        $requested=str_replace('|','.',(string)($this->request->get['route']??'common/dashboard'));
+        $permission=preg_replace('/\.[^\/.]+$/','',$requested);
+        if ($this->user->isLogged() && ($permission==='error/permission' || !$this->user->hasPermission('access',$permission))) $this->response->addHeader('HTTP/1.1 403 Forbidden');
         $output=preg_replace('~<img[^>]+src="view/image/logo\.png"[^>]*>~','<strong style="font-size:22px;color:#222">Cat<span style="color:#c49100">Part</span></strong>',$output)??$output;
+        $output=preg_replace('~<img\b(?=[^>]*\bsrc="[^"]*ru-ru[^"]*")[^>]*>~','<span lang="ru" title="Русский">RU</span>',$output)??$output;
         $style='<style>:root{--bs-primary:#a97800}.btn-primary{background:#bd9000;border-color:#a47b00}#column-left{background:#292a2d}.cp-admin{max-width:1600px}.cp-admin label{display:block;font-weight:600;margin:12px 0 5px}.cp-admin input:not([type=checkbox]):not([type=radio]),.cp-admin textarea,.cp-admin select{max-width:100%;padding:8px;border:1px solid #bbb;border-radius:4px}.cp-admin textarea{width:100%;min-height:100px}.cp-admin table{width:100%;border-collapse:collapse}.cp-admin th,.cp-admin td{padding:8px;border-bottom:1px solid #ddd;vertical-align:top;overflow-wrap:anywhere}.cp-admin .actions{display:flex;gap:8px;margin:16px 0}.cp-admin .error{color:#ad1f19}.cp-admin .success{color:#286b36}.cp-admin fieldset{border:1px solid #ddd;padding:16px;margin:16px 0}</style>';
         $output=str_replace('</head>',$style.'</head>',$output);
     }
