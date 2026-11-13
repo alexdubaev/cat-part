@@ -31,10 +31,13 @@ if (!is_file($local)) {
 }
 $localConfig = (array) require $local;
 $localDb = (array) ($localConfig['db'] ?? []);
-if (($localDb['host'] ?? null) !== '127.0.0.1'
-    || (int) ($localDb['port'] ?? 0) !== 3307
-    || ($localDb['name'] ?? null) !== 'local_catpart'
-) {
+$extensionAutoload = dirname(BASE_PATH, 2) . '/opencart/extension/catpart/system/autoload.php';
+if (is_file($extensionAutoload)) {
+    require_once $extensionAutoload;
+    $expectedDatabase = getenv('CATPART_TEST_DATABASE') ?: null;
+    \Catpart\Factory::assertLocal($localDb, is_string($expectedDatabase) ? $expectedDatabase : null);
+} elseif (($localDb['host'] ?? null) !== '127.0.0.1'
+    || (int) ($localDb['port'] ?? 0) !== 3307 || ($localDb['name'] ?? null) !== 'local_catpart') {
     throw new \RuntimeException('Local preview DB config must target 127.0.0.1:3307/local_catpart.');
 }
 $config = array_replace_recursive($config, $localConfig);

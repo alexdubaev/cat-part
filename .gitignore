@@ -19,3 +19,6 @@ local-dev/site/upload/
 **/storage/
 local-dev/site/db/
 *.log
+
+local-dev/admin-runtime/
+local-dev/site/media/
