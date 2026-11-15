@@ -1,0 +1,5 @@
+# Imagegen prompt
+
+Built-in imagegen, transparent_background=false.
+
+Use case: illustration-story. Create a polished wide 16:9 editorial cover for a Russian heavy equipment spare parts maintenance article about squealing engine accessory belts. Match the CatPart house style: pure white background, precise dark graphite technical outlines, steel gray metal, saturated golden yellow #FFCD11 accents, subtle soft shadows, clean illustrated 3D technical rendering in three-quarter view. Show one complete black continuous multi-ribbed serpentine belt loop standing in a gentle oval, with visible longitudinal grooves, beside one separate complete steel-gray pulley on a yellow spring tensioner arm. Objects are disconnected sample components, not an installed drive or assembly kit. Balanced central composition with generous white margins, fully recognizable intact objects. No engine, no extra tubes, no people, no arrows, no sound marks, no text, no numbers, no brand marks, no logos, no watermark. Generic illustration, not a depiction of a particular SKU or compatibility diagram.
