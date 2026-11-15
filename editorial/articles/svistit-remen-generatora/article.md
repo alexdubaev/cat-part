@@ -83,7 +83,3 @@ Gates связывает визг клинового ремня с проска�
 - [Gates: износ ремня и роль натяжителя в поликлиновой системе](https://go.gates.com/tensioner101).
 
 - [Caterpillar: назначение ремня 205-6670](https://parts.cat.com/en/catcorp/product/205-6670); [ремень 164-4599](https://parts.cat.com/uk/catcorp/product/164-4599); [назначение натяжителя 211-7895](https://parts.cat.com/en/catcorp/product/211-7895).
-
-
-
-
