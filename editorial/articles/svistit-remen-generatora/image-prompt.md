@@ -1,0 +1,1 @@
+White background, graphite outlines, steel gray, golden yellow #FFCD11, soft shadows, 3/4 view. Complete generic black multi-rib belt loop beside separate steel pulley on yellow spring tensioner arm. No text/logo/brands, no mounted drive, not a SKU depiction or compatibility kit. Built-in imagegen, 15 November 2026.
