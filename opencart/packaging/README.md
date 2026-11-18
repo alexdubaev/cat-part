@@ -7,3 +7,8 @@
 Run `verify --package ZIP` and compare the sidecar through a trusted channel before use. Internal hashes detect corruption; they are not a signature against an attacker replacing the whole archive.
 
 Install/update are previews unless `--apply` is explicit. Installation is limited to a fresh isolated folder with a new localhost task schema; it never installs on hosting. See `docs/admin-guide.md` and `docs/admin-migration.md`. The permanent local stand is `D:/codex/cat-part/admin-stand`; PHP/MariaDB and read-only source images remain external prerequisites. The stand's code/router/extension/defaults/assets never depend on the temporary Git worktree.
+
+Hosting uses the separate explicit `tools/hosting-install.php` path documented in
+`docs/admin-hosting.md`. Its private runtime, existing configuration bridge,
+production notification worker and deployment receipts are independent of the
+localhost installer; its guards remain unchanged.

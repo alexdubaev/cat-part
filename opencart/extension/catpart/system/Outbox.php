@@ -64,19 +64,9 @@ final class Outbox
             if(!$real || !$public)throw new \RuntimeException('capture_directory');
             $norm=static fn(string $p)=>strtolower(rtrim(str_replace('\\','/',$p),'/'));
             if($norm($real)===$norm($public) || str_starts_with($norm($real),$norm($public).'/'))throw new \RuntimeException('capture_directory');
-            $mail=Factory::settings($this->pdo,'mail');$site=Factory::settings($this->pdo,'site');
-            $recipients=array_values(array_unique(array_filter((array)($mail['notify']??[$site['email']??'']),static fn($e)=>is_string($e) && (bool)filter_var($e,FILTER_VALIDATE_EMAIL))));
-            if(!$recipients)throw new \RuntimeException('no_recipient');
-            $from=(string)($mail['from_email']??$site['email']??'');if(!filter_var($from,FILTER_VALIDATE_EMAIL))throw new \RuntimeException('invalid_sender');
-            $fromName=preg_replace('/[\r\n]/',' ',(string)($mail['from_name']??$site['company']??'CatPart'));
-            $requests=new Requests($this->pdo);$row=$job['kind']==='order'?$requests->order((int)$job['entity_id']):$requests->lead((int)$job['entity_id']);
-            if(!$row)throw new \RuntimeException('transport_error');
-            $customer=$job['kind']==='order'?$row['customer']:['name'=>$row['name'],'phone'=>$row['phone'],'email'=>$row['email'],'comment'=>$row['message']];
-            $body=$row['number']."\nИмя: ".$customer['name']."\nТелефон: ".$customer['phone']."\nEmail: ".$customer['email']."\nКомментарий: ".$customer['comment']."\nИсточник: ".$row['source']."\n";
-            if($job['kind']==='order')foreach($row['snapshot'] as $line)$body.=$line['sku'].' — '.$line['name'].' × '.$line['quantity']."\n";
-            $body.="\nЦена, наличие и условия подтверждаются менеджером.\n";
-            $subject='=?UTF-8?B?'.base64_encode(($job['kind']==='order'?'Заказ-запрос ':'Обращение ').$row['number']).'?=';
-            $mime='To: '.implode(', ',$recipients)."\r\nFrom: =?UTF-8?B?".base64_encode($fromName).'?= <'.$from.">\r\nSubject: ".$subject."\r\nMessage-ID: ".$job['message_id']."\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n".chunk_split(base64_encode($body),76,"\r\n");
+            $message=$this->message($job);
+            [$fromHeader,$headers]=explode("\r\n",$message['headers'],2);
+            $mime='To: '.$message['to']."\r\n".$fromHeader."\r\nSubject: ".$message['subject']."\r\n".$headers."\r\n\r\n".$message['body'];
             $path=$real.'/'.hash('sha256',$job['message_id']).'.eml';
             if(is_file($path)){
                 if(!hash_equals(hash('sha256',$mime),hash_file('sha256',$path)))throw new \RuntimeException('capture_write');
@@ -87,5 +77,36 @@ final class Outbox
             if(!@rename($temp,$path)){@unlink($temp);throw new \RuntimeException('capture_write');}
             @chmod($path,0600);return 'captured';
         };
+    }
+    /** True means the configured MTA accepted the message, not that an inbox received it. */
+    public function mailTransport(array $mailDefaults=[],array $siteDefaults=[],?callable $sender=null):callable
+    {
+        $sender??=static fn(string $to,string $subject,string $body,string $headers):bool=>@mail($to,$subject,$body,$headers);
+        return function(array $job)use($mailDefaults,$siteDefaults,$sender):string {
+            $message=$this->message($job,$mailDefaults,$siteDefaults);
+            if($sender($message['to'],$message['subject'],$message['body'],$message['headers'])!==true)throw new \RuntimeException('transport_error');
+            return 'accepted';
+        };
+    }
+    /** Private DTO: only validated configuration reaches headers; request data stays encoded in the body. */
+    private function message(array $job,array $mailDefaults=[],array $siteDefaults=[]):array
+    {
+        if(!in_array($job['kind']??null,['order','lead'],true) || (int)($job['entity_id']??0)<1
+            || !preg_match('/^<catpart-[a-f0-9]{32}@cat-part\.ru>$/D',(string)($job['message_id']??'')))throw new \RuntimeException('transport_error');
+        $mail=array_replace($mailDefaults,Factory::settings($this->pdo,'mail'));
+        $site=array_replace($siteDefaults,Factory::settings($this->pdo,'site'));
+        $recipients=array_values(array_unique(array_filter((array)($mail['notify']??[$site['email']??'']),static fn($e)=>is_string($e) && (bool)filter_var($e,FILTER_VALIDATE_EMAIL))));
+        if(!$recipients)throw new \RuntimeException('no_recipient');
+        $from=(string)($mail['from_email']??$site['email']??'');if(!filter_var($from,FILTER_VALIDATE_EMAIL))throw new \RuntimeException('invalid_sender');
+        $fromName=preg_replace('/[\x00-\x1F\x7F]/',' ',(string)($mail['from_name']??$site['company']??'CatPart'));
+        $requests=new Requests($this->pdo);$row=$job['kind']==='order'?$requests->order((int)$job['entity_id']):$requests->lead((int)$job['entity_id']);
+        if(!$row)throw new \RuntimeException('transport_error');
+        $customer=$job['kind']==='order'?$row['customer']:['name'=>$row['name'],'phone'=>$row['phone'],'email'=>$row['email'],'comment'=>$row['message']];
+        $body=$row['number']."\nИмя: ".$customer['name']."\nТелефон: ".$customer['phone']."\nEmail: ".$customer['email']."\nКомментарий: ".$customer['comment']."\nИсточник: ".$row['source']."\n";
+        if($job['kind']==='order')foreach($row['snapshot'] as $line)$body.=$line['sku'].' — '.$line['name'].' × '.$line['quantity']."\n";
+        $body.="\nЦена, наличие и условия подтверждаются менеджером.\n";
+        return ['to'=>implode(', ',$recipients),'subject'=>'=?UTF-8?B?'.base64_encode(($job['kind']==='order'?'Заказ-запрос ':'Обращение ').$row['number']).'?=',
+            'headers'=>'From: =?UTF-8?B?'.base64_encode($fromName).'?= <'.$from.">\r\nMessage-ID: ".$job['message_id']."\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64",
+            'body'=>chunk_split(base64_encode($body),76,"\r\n")];
     }
 }

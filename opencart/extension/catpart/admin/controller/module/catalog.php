@@ -26,7 +26,7 @@ final class Catalog extends \Catpart\AdminController
     {
         if(!$this->guard('catalog',true))return;$type=$this->type();$input=$this->posted($this->request->post);$store=new Store($this->pdo());$id=(int)($input['id']??0);
         try{
-            $siteRoot=dirname(__DIR__,6).'/local-dev/site';
+            $siteRoot=\Catpart\Content::siteRoot();
             foreach(['main_upload'=>'image_url','logo_upload'=>'logo_url'] as $field=>$target)if((int)($this->request->files[$field]['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_NO_FILE){try{$input[$target]=$store->uploadImage($this->request->files[$field],$siteRoot);}catch(\InvalidArgumentException $e){throw new \Catpart\CatalogFieldError($target,$e->getMessage());}}
             if($type==='product'){
                 if ((int)($this->request->files['main_upload']['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_NO_FILE) { $next=count($input['images']??[]); $input['images'][$next]=['url'=>$input['image_url'],'alt'=>$input['name']??'','caption'=>'']; $input['primary_image']=(string)$next; }

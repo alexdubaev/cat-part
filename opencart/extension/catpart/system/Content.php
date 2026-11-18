@@ -46,16 +46,18 @@ final class Content
             }
             Factory::saveSettings($pdo,'content_contact_migration',['version'=>1],0);
         }
-        // The inspected legacy source DB session used Europe/Moscow (UTC+03:00).
-        // Record the exact original timestamps before the one-time local migration.
+        // Legacy DATETIME wall-clock values used Moscow. TIMESTAMP already represents
+        // an instant and the UTC connection has converted its display; never shift it.
         $marker=$pdo->query("SELECT data FROM cp_settings WHERE section='content_utc_migration'")->fetchColumn();
         if($marker===false){
+            $columnTypes=[];foreach($pdo->query('SHOW COLUMNS FROM blog_posts')->fetchAll() as $column)if(in_array($column['Field'],['published_at','created_at'],true))$columnTypes[$column['Field']]=strtolower($column['Type']);
+            $converted=[];foreach(['published_at','created_at'] as $column){$type=$columnTypes[$column]??'';if(!preg_match('/^(datetime|timestamp)(?:\([0-6]\))?$/D',$type))throw new \RuntimeException('Unsupported legacy article date column.');if(str_starts_with($type,'datetime'))$converted[]=$column;}
             $pdo->beginTransaction();
             try {
                 $originalDates=$pdo->query('SELECT id,published_at,created_at FROM blog_posts ORDER BY id')->fetchAll();
-                $pdo->exec('UPDATE blog_posts SET published_at=DATE_SUB(published_at,INTERVAL 3 HOUR),created_at=DATE_SUB(created_at,INTERVAL 3 HOUR)');
+                if($converted)$pdo->exec('UPDATE blog_posts SET '.implode(',',array_map(static fn($column)=>'`'.$column.'`=DATE_SUB(`'.$column.'`,INTERVAL 3 HOUR)',$converted)));
                 $migration=$pdo->prepare("INSERT INTO cp_settings(section,data,updated_at) VALUES('content_utc_migration',?,UTC_TIMESTAMP())");
-                $migration->execute([json_encode(['source_timezone'=>'Europe/Moscow','target_timezone'=>'UTC','original_dates'=>$originalDates],JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR)]);
+                $migration->execute([json_encode(['source_timezone'=>'Europe/Moscow','target_timezone'=>'UTC','column_types'=>$columnTypes,'converted_columns'=>$converted,'original_dates'=>$originalDates],JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR)]);
                 $pdo->commit();
             } catch(\Throwable $error){if($pdo->inTransaction())$pdo->rollBack();throw $error;}
         }
