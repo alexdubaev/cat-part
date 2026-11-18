@@ -1,0 +1,83 @@
+<?php
+declare(strict_types=1);
+// A new synthetic schema and private directories only. Never points installer fixtures at a live site.
+require_once dirname(__DIR__).'/tools/hosting-install.php';
+$qa=getenv('CATPART_ADMIN_RUNTIME');if(!is_string($qa) || !is_file($qa.'/state.json'))throw new RuntimeException('Explicit isolated QA runtime required.');
+$qaState=json_decode((string)file_get_contents($qa.'/state.json'),true,512,JSON_THROW_ON_ERROR);
+if(!preg_match('/^catpart_admin_[a-f0-9]{12}$/D',$qaState['database']??'') || !preg_match('~^http://127\.0\.0\.1:[0-9]+$~D',$qaState['origin']??''))throw new RuntimeException('Only owned loopback QA allowed.');
+$requestedPort=getenv('CATPART_HOSTING_TEST_PORT');
+if($requestedPort!==false && $requestedPort!=='3318')throw new RuntimeException('The optional compatibility port must be exactly 3318.');
+$testPort=$requestedPort===false?3307:3318;
+$root=new PDO('mysql:host=127.0.0.1;port='.$testPort.';charset=utf8mb4','root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);$root->exec("SET time_zone='+00:00'");
+if($testPort===3318 && !preg_match('/^5\\.7\\./D',(string)$root->query('SELECT @@version')->fetchColumn()))throw new RuntimeException('Compatibility fixture requires actual MySQL 5.7.');
+$tag=bin2hex(random_bytes(6));$database='catpart_hosting_'.$tag;$dateDatabase='catpart_hosting_dates_'.$tag;$directory=$qa.'/private/hosting-install-'.$tag;
+if(file_exists($directory))throw new RuntimeException('Fixture collision.');mkdir($directory,0700,true);file_put_contents($directory.'/.owned',$tag);
+$checks=0;$created=[];
+function hostingCheck(bool $ok,string $label):void {global $checks;if(!$ok)throw new RuntimeException($label);$checks++;echo 'PASS '.$label.PHP_EOL;}
+function hostingDenied(callable $call,string $label):void {try{$call();}catch(RuntimeException){hostingCheck(true,$label);return;}throw new RuntimeException($label);}
+function hostingInterrupted(callable $call,string $label,string $message='Synthetic preparation interruption'):void {try{$call();}catch(RuntimeException $error){if($error->getMessage()!==$message)throw $error;hostingCheck(true,$label);return;}throw new RuntimeException($label);}
+function hostingFixtureDatabase(PDO $root,string $name,int $port):PDO {global $created;if(!in_array($port,[3307,3318],true))throw new RuntimeException('Unexpected fixture database port.');$root->exec('CREATE DATABASE `'.$name.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');$created[]=$name;$pdo=new PDO('mysql:host=127.0.0.1;port='.$port.';dbname='.$name.';charset=utf8mb4','root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,PDO::ATTR_EMULATE_PREPARES=>false]);$pdo->exec("SET time_zone='+00:00'");return $pdo;}
+try {
+    $pdo=hostingFixtureDatabase($root,$database,$testPort);$site=$directory.'/site';$runtime=$directory.'/runtime';mkdir($site.'/app/Config',0700,true);mkdir($runtime,0700,true);
+    $source=str_replace('\\','/',dirname(__DIR__));$archive='D:/codex/temp/cmteh-opencart-cache/opencart-4.1.0.4.zip';
+    $config=['app'=>['base_url'=>'https://catpart.example.invalid','timezone'=>'Europe/Moscow','debug'=>false],'db'=>['host'=>'127.0.0.1','port'=>$testPort,'name'=>$database,'user'=>'root','pass'=>'','charset'=>'utf8mb4'],'mail'=>['delivery'=>'mail','notify'=>['fixture@example.test'],'from_email'=>'sender@example.test']];
+    file_put_contents($site.'/app/Config/config.php','<?php return '.var_export($config,true).';');
+    $branding=['name'=>'Synthetic CatPart','company'=>'Synthetic fixture','email'=>'sender@example.test','address'=>'Synthetic address','phones'=>[['label'=>'Synthetic phone','tel'=>'+70000000000']]];file_put_contents($site.'/app/Config/branding.php','<?php return '.var_export($branding,true).';');
+    file_put_contents($site.'/index.php','<?php echo "Synthetic legacy fixture";');file_put_contents($site.'/.htaccess',"# synthetic existing hosting rules\n");
+    $configHash=hash_file('sha256',$site.'/app/Config/config.php');$brandingHash=hash_file('sha256',$site.'/app/Config/branding.php');
+    foreach(['brands','categories','products','attributes','product_attr_values','product_images','product_compat','product_cross'] as $table)$pdo->exec('CREATE TABLE `'.$table.'` (id INT PRIMARY KEY) ENGINE=InnoDB');$pdo->exec('INSERT INTO products VALUES(17)');
+    $pdo->exec("CREATE TABLE blog_posts(id INT UNSIGNED PRIMARY KEY,slug VARCHAR(190),title VARCHAR(255),is_active TINYINT,published_at DATETIME NULL,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,image_url VARCHAR(512) NULL) ENGINE=InnoDB");
+    $pdo->exec("INSERT INTO blog_posts(id,slug,title,is_active,published_at,created_at) VALUES(23,'synthetic-article','Synthetic article',1,'2026-11-18 09:00:00','2026-11-01 05:00:00'),(24,'synthetic-null-date','Synthetic null date',0,NULL,'2026-11-01 06:00:00')");
+    $options=['site'=>$site,'runtime'=>$runtime,'source'=>$source,'upstream'=>$archive,'origin'=>'https://catpart.example.invalid','database'=>$database];$identity=catpart_hosting_identity($options);
+    hostingCheck(catpart_hosting_preflight($pdo,$identity)['phase']==='new','fresh synthetic canonical database passes metadata-only preflight');
+    $wrong=$options;$wrong['source-sha256']=str_repeat('0',64);hostingDenied(static fn()=>catpart_hosting_identity($wrong),'wrong source pin rejected');
+    $pdo->exec('CREATE TABLE cp_collision (id INT) ENGINE=InnoDB');hostingDenied(static fn()=>catpart_hosting_preflight($pdo,$identity),'existing unowned prefix rejected');$pdo->exec('DROP TABLE cp_collision');
+    mkdir($site.'/admin');hostingDenied(static fn()=>catpart_hosting_preflight($pdo,$identity),'existing unowned admin path rejected');rmdir($site.'/admin');
+    $before=$pdo->query('SELECT id,published_at,created_at,UNIX_TIMESTAMP(created_at) epoch FROM blog_posts ORDER BY id')->fetchAll();
+    foreach(['before_ddl','during_ddl','after_owner'] as $failure){
+        hostingInterrupted(static fn()=>catpart_hosting_prepare($pdo,$identity,$archive,static function($step)use($failure){if($step===$failure)throw new RuntimeException('Synthetic preparation interruption');}),'injected preparation '.$failure.' is reported');
+        hostingCheck(catpart_hosting_state($identity)['phase']==='preparing' && $before===$pdo->query('SELECT id,published_at,created_at,UNIX_TIMESTAMP(created_at) epoch FROM blog_posts ORDER BY id')->fetchAll() && !is_dir($site.'/admin'),'interrupted '.$failure.' keeps live site and canonical dates untouched');
+        if($failure==='before_ddl'){$pdo->exec('CREATE TABLE cp_unowned_resume (id INT) ENGINE=InnoDB');hostingDenied(static fn()=>catpart_hosting_prepare($pdo,$identity,$archive),'resume refuses unjournaled table');$pdo->exec('DROP TABLE cp_unowned_resume');}
+        if($failure==='during_ddl'){$owned=array_key_first(catpart_hosting_state($identity)['table_journal']);$pdo->exec('ALTER TABLE `'.$owned.'` ADD wrong_fixture_column INT');hostingDenied(static fn()=>catpart_hosting_prepare($pdo,$identity,$archive),'resume refuses mismatched owned table schema');$pdo->exec('ALTER TABLE `'.$owned.'` DROP wrong_fixture_column');}
+        if($failure==='after_owner')$ownerCredentialHash=hash_file('sha256',$runtime.'/private/owner-account.json');
+    }
+    $report=catpart_hosting_prepare($pdo,$identity,$archive);
+    hostingCheck($report['phase']==='prepared' && $before===$pdo->query('SELECT id,published_at,created_at,UNIX_TIMESTAMP(created_at) epoch FROM blog_posts ORDER BY id')->fetchAll(),'prepare creates no public activation or article date shift');
+    hostingCheck($pdo->query('SELECT id FROM products')->fetchColumn()==17 && $pdo->query('SELECT COUNT(*) FROM oc_product')->fetchColumn()==0 && $pdo->query('SELECT COUNT(*) FROM oc_customer')->fetchColumn()==0,'canonical IDs retained with empty native catalog and customer registry');
+    hostingCheck($pdo->query('SELECT COUNT(*) FROM oc_user')->fetchColumn()==1 && $pdo->query('SELECT code FROM oc_language WHERE language_id=1')->fetchColumn()==='ru-ru' && is_file($runtime.'/private/owner-account.json'),'one private owner account and coherent native Russian language');
+    hostingCheck($ownerCredentialHash===hash_file('sha256',$runtime.'/private/owner-account.json') && $pdo->query('SELECT COUNT(*) FROM oc_user_group')->fetchColumn()==1,'resumed preparation preserves committed owner credentials and single role');
+    hostingCheck(hash_file('sha256',$site.'/app/Config/config.php')===$configHash && hash_file('sha256',$site.'/app/Config/branding.php')===$brandingHash && !is_dir($site.'/admin'),'prepare preserves live configuration, branding and routes');
+    $nativeConfig=catpart_hosting_config($site);$nativeConfig['unused_fixture_sentinel']='unchanged';\Catpart\Factory::saveSettings($pdo,'hosting_fixture',['retained'=>true],0);
+    catpart_hosting_prepare($pdo,$identity,$archive);hostingCheck($pdo->query('SELECT COUNT(*) FROM oc_user')->fetchColumn()==1 && \Catpart\Factory::settings($pdo,'hosting_fixture')===['retained'=>true],'repeat prepare preserves users and edited settings');
+    hostingDenied(static fn()=>catpart_hosting_activate($pdo,$identity,$runtime.'/private/missing-receipt'),'activation requires verified scheduled transport evidence');
+    $receipt=$identity+['scheduled'=>true,'worker_check'=>true,'injected_transport_checks'=>true,'verified_at'=>gmdate('c')];catpart_hosting_put($runtime,'private/test-transport-receipt.json',json_encode($receipt,JSON_THROW_ON_ERROR));$receiptPath=$runtime.'/private/test-transport-receipt.json';
+    $linkTarget=$directory.'/symlink-target';mkdir($linkTarget);file_put_contents($linkTarget.'/untouched','synthetic sentinel');$linked=@symlink($linkTarget,$site.'/media');
+    if(!$linked && PHP_OS_FAMILY==='Windows'){$quote=static fn($value)=>"'".str_replace("'","''",$value)."'";$command='New-Item -ItemType Junction -Path '.$quote($site.'/media').' -Target '.$quote($linkTarget).' | Out-Null';$pipes=[];$process=proc_open(['powershell.exe','-NoProfile','-Command',$command],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);if(is_resource($process)){foreach($pipes as $pipe)fclose($pipe);$linked=proc_close($process)===0;}}
+    clearstatcache(true,$site.'/media');if(!$linked || realpath($site.'/media')!==realpath($linkTarget))throw new RuntimeException('Required symlink/junction regression infrastructure unavailable.');
+    hostingDenied(static fn()=>catpart_hosting_activate($pdo,$identity,$receiptPath),'live media ancestor symlink rejected before activation');
+    hostingCheck(file_get_contents($site.'/.htaccess')==="# synthetic existing hosting rules\n" && !file_exists($linkTarget.'/.htaccess'),'symlink preflight changes neither maintenance rules nor external target');if(!@unlink($site.'/media') && !rmdir($site.'/media'))throw new RuntimeException('Cannot remove owned symlink fixture.');
+    foreach(['after_seed','during_files','after_app_switch'] as $failure){
+        hostingInterrupted(static fn()=>catpart_hosting_activate($pdo,$identity,$receiptPath,static function($step)use($failure){if($step===$failure)throw new RuntimeException('Synthetic activation failure');}),'injected '.$failure.' is reported','Synthetic activation failure');
+        hostingCheck(catpart_hosting_state($identity)['phase']==='prepared' && $before===$pdo->query('SELECT id,published_at,created_at,UNIX_TIMESTAMP(created_at) epoch FROM blog_posts ORDER BY id')->fetchAll() && file_get_contents($site.'/.htaccess')==="# synthetic existing hosting rules\n" && str_contains(file_get_contents($site.'/index.php'),'Synthetic legacy fixture'),'injected '.$failure.' restores available legacy code and original dates without data restore');
+    }
+    $report=catpart_hosting_activate($pdo,$identity,$receiptPath);$after=$pdo->query('SELECT id,published_at,created_at,UNIX_TIMESTAMP(created_at) epoch FROM blog_posts ORDER BY id')->fetchAll();
+    hostingCheck($report['phase']==='active' && $after[0]['published_at']==='2026-11-18 06:00:00' && $after[0]['epoch']===$before[0]['epoch'] && $after[1]['published_at']===null,'activation shifts Moscow DATETIME only, preserving TIMESTAMP instant and nullable publication');
+    $marker=\Catpart\Factory::settings($pdo,'content_utc_migration');hostingCheck($marker['column_types']['created_at']==='timestamp' && $marker['converted_columns']===['published_at'] && $marker['original_dates'][0]['created_at']===$before[0]['created_at'],'migration records original dates and actual column types');
+    hostingCheck(hash_file('sha256',$site.'/app/Config/config.php')===$configHash && hash_file('sha256',$site.'/app/Config/branding.php')===$brandingHash && file_get_contents($site.'/.htaccess')==="# synthetic existing hosting rules\n",'activation preserves existing private config, branding and hosting rules');
+    hostingCheck(\Catpart\Factory::settings($pdo,'mail')['notify']===['fixture@example.test'] && \Catpart\Factory::settings($pdo,'mail')['from_email']==='sender@example.test','existing application recipients and sender survive content seeding');
+    foreach(['image','upload','media'] as $media)hostingCheck(str_contains(file_get_contents($site.'/'.$media.'/.htaccess'),'Require all denied'),'execution denied in '.$media.' media directory');
+    $requests=new \Catpart\Requests($pdo);$lead=$requests->submitLead(bin2hex(random_bytes(32)),bin2hex(random_bytes(32)),['name'=>'Synthetic after activation','phone'=>'70000000000','email'=>'fixture@example.test','comment'=>'Synthetic preserved request','consent'=>1],'Synthetic fixture','/test');
+    catpart_hosting_activate($pdo,$identity,$receiptPath);hostingCheck($after===$pdo->query('SELECT id,published_at,created_at,UNIX_TIMESTAMP(created_at) epoch FROM blog_posts ORDER BY id')->fetchAll(),'repeat activation does not shift dates again');
+    $publicHash=hash_file('sha256',$site.'/app/Controllers/LeadController.php');$rollback=catpart_hosting_rollback($pdo,$identity);
+    hostingCheck($rollback['phase']==='disabled' && $requests->lead($lead['id'])['message']==='Synthetic preserved request' && $publicHash===hash_file('sha256',$site.'/app/Controllers/LeadController.php') && str_contains(file_get_contents($site.'/admin/index.php'),'503'),'rollback disables admin and retains UTC-compatible public request pipeline and new requests');
+    catpart_hosting_activate($pdo,$identity,$receiptPath);hostingCheck(catpart_hosting_state($identity)['phase']==='active' && $requests->lead($lead['id'])!==null,'reactivation preserves requests and original timestamp migration');
+    // A second new schema proves the legacy all-DATETIME variant still converts both columns.
+    $dates=hostingFixtureDatabase($root,$dateDatabase,$testPort);$dates->exec("CREATE TABLE blog_posts(id INT UNSIGNED PRIMARY KEY,slug VARCHAR(190),title VARCHAR(255),is_active TINYINT,published_at DATETIME NULL,created_at DATETIME NOT NULL,image_url VARCHAR(512) NULL) ENGINE=InnoDB");$dates->exec("INSERT INTO blog_posts VALUES(1,'dates','Dates',1,'2026-11-18 09:00:00','2026-11-01 09:00:00',NULL)");
+    \Catpart\Factory::migrate($dates);\Catpart\Content::migrate($dates);\Catpart\Content::seed($dates,$site);$row=$dates->query('SELECT published_at,created_at FROM blog_posts')->fetch();
+    hostingCheck($row===['published_at'=>'2026-11-18 06:00:00','created_at'=>'2026-11-01 06:00:00'],'legacy all-DATETIME variant shifts each wall-clock column exactly once');\Catpart\Content::seed($dates,$site);hostingCheck($row===$dates->query('SELECT published_at,created_at FROM blog_posts')->fetch(),'all-DATETIME seed is repeatable');
+    echo $checks." hosting installation checks passed; synthetic schemas only, no mail sent\n";
+} finally {
+    foreach($created as $name){if(!in_array($name,[$database,$dateDatabase],true) || !preg_match('/^catpart_hosting_(?:dates_)?[a-f0-9]{12}$/D',$name))throw new RuntimeException('Fixture database cleanup identity failure.');$root->exec('DROP DATABASE `'.$name.'`');}
+    $resolved=realpath($directory);$private=realpath($qa.'/private');if(!$resolved || !$private || !str_starts_with($resolved,$private.DIRECTORY_SEPARATOR) || file_get_contents($directory.'/.owned')!==$tag)throw new RuntimeException('Fixture directory cleanup identity failure.');
+    $iterator=new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,FilesystemIterator::SKIP_DOTS),RecursiveIteratorIterator::CHILD_FIRST);foreach($iterator as $entry){if($entry->isLink())throw new RuntimeException('Fixture cleanup symlink refused.');if($entry->isDir())rmdir($entry->getPathname());else unlink($entry->getPathname());}rmdir($directory);
+}

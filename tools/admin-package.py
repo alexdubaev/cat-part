@@ -1,4 +1,4 @@
-"""Deterministic offline package and explicit loopback-only installer. Preview is default."""
+"""Deterministic offline package; loopback installer and separate explicit hosting tools."""
 import argparse, datetime, hashlib, json, os, re, shutil, subprocess, sys, zipfile
 from pathlib import Path, PurePosixPath
 ROOT=Path(__file__).resolve().parents[1]
@@ -21,7 +21,7 @@ def sources():
         paths.extend(p for p in (ROOT/area).rglob('*') if p.is_file())
     for area,pattern in (('tools','admin-*.py'),('tools','admin-*.php'),('tools','test-admin-*'),('tests','admin-*'),('opencart/packaging','*.json'),('opencart/packaging','*.md'),('opencart/packaging/licenses','*')):
         paths.extend(p for p in (ROOT/area).glob(pattern) if p.is_file())
-    for name in ('local-dev/router.php','local-dev/site/.htaccess','local-dev/site/app/.htaccess','local-dev/site/index.php','local-dev/site/manifest.webmanifest','local-dev/site/robots.txt','local-dev/site/yandex_130ab6b1c0898944.html','local-dev/site/yandex_5c308862defefe42.html','tools/test-checkout.py','tools/checkout-test-router.php','tools/send-admin-notifications.php','docs/admin-guide.md','docs/admin-architecture.md','docs/admin-migration.md','docs/admin-reuse.md'):
+    for name in ('local-dev/router.php','local-dev/site/.htaccess','local-dev/site/app/.htaccess','local-dev/site/index.php','local-dev/site/manifest.webmanifest','local-dev/site/robots.txt','local-dev/site/yandex_130ab6b1c0898944.html','local-dev/site/yandex_5c308862defefe42.html','tools/test-checkout.py','tools/checkout-test-router.php','tools/send-admin-notifications.php','tools/send-hosting-notifications.php','tools/hosting-runtime.php','tools/hosting-install.php','tools/test-hosting-runtime.php','docs/admin-hosting.md','docs/admin-guide.md','docs/admin-architecture.md','docs/admin-migration.md','docs/admin-reuse.md'):
         p=ROOT/name
         if not p.is_file():raise RuntimeError('Required package source missing: '+name)
         paths.append(p)
@@ -42,7 +42,7 @@ def build(args):
     revision=subprocess.run(['git','rev-parse','HEAD'],cwd=ROOT,capture_output=True,text=True)
     source_ref=revision.stdout.strip() if revision.returncode==0 else json.loads((ROOT/'package-manifest.json').read_text())['source_revision']
     rows=[{'path':name,'size':len(data),'sha256':digest(data)} for name,data in sorted(payload.items())]
-    manifest={'format':1,'source_revision':source_ref,'source_tree_sha256':digest(encoded(rows)),'upstream':{'version':'4.1.0.4','path':UPSTREAM_NAME,'sha256':CORE_HASH},'installed_extensions':[{'code':'catpart','version':'1.0.0'}],'files':rows,'scope':'loopback stand only; no hosting or real mail verification'}
+    manifest={'format':1,'source_revision':source_ref,'source_tree_sha256':digest(encoded(rows)),'upstream':{'version':'4.1.0.4','path':UPSTREAM_NAME,'sha256':CORE_HASH},'installed_extensions':[{'code':'catpart','version':'1.0.0'}],'files':rows,'scope':'loopback installer; hosting uses separate explicit tools and external deployment receipts'}
     payload['package-manifest.json']=encoded(manifest)
     output=args.output.resolve();output.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(output,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:

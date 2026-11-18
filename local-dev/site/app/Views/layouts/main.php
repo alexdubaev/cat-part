@@ -110,7 +110,8 @@ foreach ((array) ($P['jsonld'] ?? []) as $extra) {
 // и превратила разметку в XSS. Экранированный < для JSON-LD валиден.
 $jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG;
 
-$analyticsHost = strtolower((string)parse_url((string)cfg('app.base_url'), PHP_URL_HOST));
+$analyticsHost = defined('APPLICATION') && APPLICATION === 'Admin'
+    ? '' : strtolower((string)parse_url((string)cfg('app.base_url'), PHP_URL_HOST));
 $siteSettings = (array)cfg('site',[]);
 $metrikaId = in_array($analyticsHost, ['cat-part.ru','www.cat-part.ru'], true) ? (string)($siteSettings['metrika_id'] ?? '') : '';
 
