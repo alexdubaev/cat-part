@@ -19,7 +19,7 @@ final class LeadController extends Controller
         try{$result=(new Requests(App::db()->pdo()))->submitLead(Session::get('request_owner'),(string)($_POST['lead_token']??''),$old,$type,$this->pageUrl().'#'.$source);}
         catch(InvalidArgumentException $e){$this->failure($ajax,$e->getMessage(),$old,422);}
         catch(Throwable $e){error_log('[catpart] lead persistence failure: '.get_class($e));$this->failure($ajax,'Не удалось сохранить обращение. Введённые данные сохранены — повторите отправку этой формы.',$old,500);}
-        $this->success($ajax,'Обращение принято. Номер '.$result['number'].'. Мы свяжемся с вами.');
+        $this->success($ajax,'Обращение принято. Номер '.$result['number'].'. Мы свяжемся с вами.', !$result['replayed']);
     }
     private function pageUrl():string
     {
@@ -28,9 +28,10 @@ final class LeadController extends Controller
         if(!$parts || strcasecmp((string)($parts['host']??''),(string)($own['host']??''))!==0 || (int)($parts['port']??80)!==(int)($own['port']??80))return '/';
         return substr((string)($parts['path']??'/'),0,300);
     }
-    private function success(bool $ajax,string $message):never
+    private function success(bool $ajax,string $message,bool $saved=false):never
     {
-        if($ajax)$this->json(['ok'=>true,'message'=>$message,'lead_token'=>bin2hex(random_bytes(32))]);
+        if($ajax)$this->json(['ok'=>true,'message'=>$message,'lead_token'=>bin2hex(random_bytes(32))] + ($saved ? ['metrika_goal'=>'cp_lead_submitted'] : []));
+        if ($saved) Session::flash('metrika_goal','cp_lead_submitted');
         Session::flash('lead_ok',$message);$this->back('/','zayavka');
     }
     private function failure(bool $ajax,string $message,array $old,int $status):never
