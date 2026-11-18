@@ -25,7 +25,9 @@ final class CartController extends Controller
         if(Product::findActiveById($id)===null)$this->error('Позиция недоступна. Обновите каталог и попробуйте снова.');
         try{$qty=Requests::quantity($_POST['qty']??'1');$cart=$this->cart();$sum=Requests::quantity((string)((int)($cart[(string)$id]??0)+$qty));}
         catch(InvalidArgumentException $e){$this->error($e->getMessage());}
-        $cart[(string)$id]=$sum;Session::set('cart',$cart);Session::flash('cart_ok','Позиция добавлена в корзину.');$this->redirect('/korzina');
+        $cart[(string)$id]=$sum;Session::set('cart',$cart);
+        Session::flash('metrika_goal','cp_add_to_cart');
+        Session::flash('cart_ok','Позиция добавлена в корзину.');$this->redirect('/korzina');
     }
     public function update(): never
     {
@@ -58,6 +60,7 @@ final class CartController extends Controller
                 $currentCart=$this->cart();
                 foreach(($receipt['submitted']??[]) as $id=>$quantity){$left=(int)($currentCart[$id]??0)-(int)$quantity;if($left>0)$currentCart[$id]=$left;else unset($currentCart[$id]);}
                 Session::set('cart',$currentCart);$cleared[$token]=true;Session::set('checkout_cleared',$cleared);
+                Session::flash('metrika_goal','cp_order_submitted');
             }
             if(Session::get('checkout_token')===$token)Session::forget('checkout_token');
         }catch(InvalidArgumentException $e){$this->error($e->getMessage(),$old);}

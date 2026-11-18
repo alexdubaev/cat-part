@@ -119,6 +119,25 @@
   // упало) форма остаётся обычным POST на /zayavka: тот же контроллер, тот же
   // ответ, только со сменой страницы. Поэтому перехватываем submit, а не
   // подменяем разметку, и никогда не трогаем action/method.
+  var metrikaCounter = document.body.getAttribute('data-metrika-counter');
+  function metrikaGoal(goal) {
+    if (!/^[1-9][0-9]*$/.test(metrikaCounter || '') || typeof window.ym !== 'function') return;
+    try { window.ym(Number(metrikaCounter), 'reachGoal', goal); } catch (error) {
+      // Analytics must never interrupt the customer action.
+    }
+  }
+
+  var pageGoal = document.body.getAttribute('data-metrika-goal');
+  if (['cp_lead_submitted', 'cp_order_submitted', 'cp_add_to_cart'].indexOf(pageGoal) !== -1) {
+    document.body.removeAttribute('data-metrika-goal');
+    metrikaGoal(pageGoal);
+  }
+
+  document.addEventListener('click', function (ev) {
+    var link = ev.target.closest ? ev.target.closest('a[href]') : null;
+    if (link && /^tel:/i.test(link.getAttribute('href'))) metrikaGoal('cp_phone_clicked');
+  });
+
   var leadForms = document.querySelectorAll('form[data-lead]');
 
   Array.prototype.forEach.call(leadForms, function (form, formIndex) {
@@ -178,6 +197,7 @@
         })
         .then(function (data) {
           var ok = !!(data && data.ok);
+          if (ok && data.metrika_goal === "cp_lead_submitted") metrikaGoal(data.metrika_goal);
           show(
             (data && data.message) || (ok ? 'Заявка отправлена.' : 'Не удалось отправить заявку.'),
             ok

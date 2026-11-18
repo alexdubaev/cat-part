@@ -163,7 +163,8 @@ $metrikaId = in_array($analyticsHost, ['cat-part.ru','www.cat-part.ru'], true) ?
 <?php foreach(['yandex_verification'=>'yandex-verification','google_verification'=>'google-site-verification'] as $key=>$name): if((string)cfg('site.'.$key,'')!==''): ?><meta name="<?= e($name) ?>" content="<?= e(cfg('site.'.$key)) ?>"><?php endif; endforeach; ?>
 <?= \Catpart\Content::analyticsHtml($siteSettings,$analyticsHost) ?>
 </head>
-<body>
+<?php $metrikaGoal = \App\Core\Session::getFlash('metrika_goal'); ?>
+<body<?php if (ctype_digit($metrikaId)): ?> data-metrika-counter="<?= e($metrikaId) ?>"<?php endif; ?><?php if (is_string($metrikaGoal)): ?> data-metrika-goal="<?= e($metrikaGoal) ?>"<?php endif; ?>>
 <?php if ($metrikaId !== ''): ?>
 <noscript><div><img src="https://mc.yandex.ru/watch/<?= e($metrikaId) ?>" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 <?php endif; ?>
