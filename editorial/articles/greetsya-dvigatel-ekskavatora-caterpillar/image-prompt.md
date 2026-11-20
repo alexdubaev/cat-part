@@ -1,0 +1,5 @@
+# ImageGen · 20.11.2026
+
+Референсы CatPart: filtry-i-rabochie-zhidkosti-poddelka.webp, hodovaya-chast-kogda-menyat.webp.
+
+Wide 16:9 CatPart editorial technical illustration. Match the supplied illustrations for style only: pure white studio background, accurate industrial proportions, hard graphite contours, warm golden-yellow and steel-gray surfaces with crisp planes, soft contact shadows, consistent three-quarter angle. Subject: cooling system of a heavy-duty excavator diesel, one recognizable rectangular upright radiator with a gold frame and dark fine gray cooling fins, short dark hose neck, and closed metal pressure cap seated on the top neck. In the foreground show a separate conventional small metal engine coolant thermostat with a round brass flange, valve bridge and visible steel spring, well separated from the radiator and easy to recognize. These are generic editorial components, not particular SKU products. Everything fully in frame, centered with generous whitespace and no busy surroundings. No logos, no letters, no markings, no hands, no flames, no steam, no arrows, no typography.
